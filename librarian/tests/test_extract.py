@@ -1,3 +1,5 @@
+import json
+import pytest
 from librarian.corpus import Book, Section
 from librarian.extract import extract_principles
 from tests.fakes import FakeLLM, principles_json
@@ -28,3 +30,21 @@ def test_extract_principles_parses_llm_json_into_principles():
 def test_extract_principles_tolerates_fenced_json():
     llm = FakeLLM(["```json\n[]\n```"])
     assert extract_principles(BOOK, "Ch", SECTION, llm) == []
+
+
+def test_extract_principles_tolerates_bare_fence_and_preamble():
+    llm = FakeLLM(["Here is the result:\n```\n[]\n```"])
+    assert extract_principles(BOOK, "Ch", SECTION, llm) == []
+
+
+def test_extract_principles_rejects_non_array():
+    llm = FakeLLM([json.dumps({"not": "an array"})])
+    with pytest.raises(ValueError):
+        extract_principles(BOOK, "Ch", SECTION, llm)
+
+
+def test_extract_principles_rejects_bad_tier():
+    llm = FakeLLM([principles_json([
+        {"statement": "x", "checkability_tier": 9, "evidence_chunk": "y"}])])
+    with pytest.raises(ValueError):
+        extract_principles(BOOK, "Ch", SECTION, llm)

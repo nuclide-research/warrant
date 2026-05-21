@@ -9,6 +9,10 @@ class FakeLLM:
 
     def complete(self, prompt: str) -> str:
         self.prompts.append(prompt)
+        if not self._responses:
+            raise IndexError(
+                f"FakeLLM exhausted: complete() called {len(self.prompts)} "
+                f"times, no response queued")
         return self._responses.pop(0)
 
 
