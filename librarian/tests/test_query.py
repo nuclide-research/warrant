@@ -34,3 +34,25 @@ def test_query_returns_top_k_with_citations_and_graph_neighbors():
     assert r.principle.id == "p1"
     assert r.citation.section == "p1"
     assert r.neighbors == [("p2", "contradicts")]
+
+
+def test_query_empty_index_returns_empty():
+    index = Index(principles=[], embeddings=np.zeros((0, 2), dtype=np.float32), edges=[])
+    assert query_index(index, "x", FakeEmbedder(), FakeReranker(), k=3) == []
+
+
+def test_query_principle_without_neighbors():
+    index = Index(principles=[_p("p1", "lonely principle")],
+                  embeddings=np.array([[1.0, 0.0]], dtype=np.float32),
+                  edges=[])
+    results = query_index(index, "x", FakeEmbedder(), FakeReranker(), k=1)
+    assert len(results) == 1
+    assert results[0].neighbors == []
+
+
+def test_query_k_exceeds_result_count():
+    index = Index(principles=[_p("p1", "only principle")],
+                  embeddings=np.array([[1.0, 0.0]], dtype=np.float32),
+                  edges=[])
+    results = query_index(index, "x", FakeEmbedder(), FakeReranker(), k=5)
+    assert len(results) == 1

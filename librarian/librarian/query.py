@@ -43,8 +43,13 @@ def _neighbors(index: Index, pid: str) -> list[tuple[str, str]]:
 
 
 def query_index(index: Index, query_text: str, embedder, reranker, k: int = 5) -> list[Result]:
+    """Retrieve the top-k principles for a query: semantic pool, cross-encoder
+    rerank, graph-neighbor enrichment. `k` should be <= SEMANTIC_POOL (20);
+    results are silently capped at SEMANTIC_POOL otherwise."""
     if not index.principles:
         return []
+    if index.embeddings.shape[0] != len(index.principles):
+        raise ValueError("index is corrupt: embeddings/principles length mismatch")
     qv = embedder.encode([query_text])[0]
     sims = index.embeddings @ qv  # rows are normalized -> dot == cosine
     pool_idx = np.argsort(sims)[::-1][:SEMANTIC_POOL]
