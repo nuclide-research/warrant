@@ -1,3 +1,4 @@
+import pytest
 import numpy as np
 from librarian.models import Citation, Principle, Edge
 from librarian.store import Index, save_index, load_index
@@ -39,3 +40,14 @@ def test_order_is_preserved(tmp_path):
     assert loaded.principles[1].statement == "Second."
     assert loaded.embeddings[0, 0] == 1.0
     assert loaded.embeddings[1, 1] == 1.0
+
+
+def test_save_index_rejects_principle_id_collision(tmp_path):
+    p1 = Principle(id="dupe", statement="A.", citation=Citation("B", "111", "C", "S"),
+                   checkability_tier=1, evidence_chunk="e")
+    p2 = Principle(id="dupe", statement="B.", citation=Citation("B", "111", "C", "S"),
+                   checkability_tier=2, evidence_chunk="e")
+    idx = Index(principles=[p1, p2],
+                embeddings=np.ones((2, 4), dtype=np.float32), edges=[])
+    with pytest.raises(ValueError):
+        save_index(idx, tmp_path)

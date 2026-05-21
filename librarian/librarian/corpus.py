@@ -56,23 +56,31 @@ def _chapter_files(book: Book) -> list[Path]:
 
 
 def _chapter_title(md: str, fallback: str) -> str:
+    """The chapter title is the text of the file's first Markdown heading,
+    at whatever level. colophon exports open a chapter with its title as an
+    H1, H2, or deeper, depending on the publisher."""
     for line in md.splitlines():
-        if line.startswith("# "):
-            return line[2:].strip()
+        m = re.match(r"#{1,6}\s+(.*)", line)
+        if m and m.group(1).strip():
+            return m.group(1).strip()
     return fallback
 
 
 def split_sections(md: str) -> list[Section]:
-    """Split chapter Markdown on `##`/`###` headings. Text before the first
-    heading becomes a section with heading 'Introduction'."""
+    """Split chapter Markdown into sections. The file's first Markdown
+    heading (any level) is the chapter title and is consumed here, not
+    emitted as a section; every later heading starts a section. Text between
+    the title and the first section heading becomes an 'Introduction' section."""
     sections: list[Section] = []
     heading = "Introduction"
     buf: list[str] = []
+    title_seen = False
     for line in md.splitlines():
-        if line.startswith("# ") and not line.startswith("## "):
-            continue  # the chapter H1, already captured as the title
-        m = re.match(r"#{2,3}\s+(.*)", line)
-        if m:
+        m = re.match(r"#{1,6}\s+(.*)", line)
+        if m and m.group(1).strip():
+            if not title_seen:
+                title_seen = True  # the chapter title line — drop it
+                continue
             if buf and "".join(buf).strip():
                 sections.append(Section(heading=heading, text="\n".join(buf).strip()))
             heading = m.group(1).strip()

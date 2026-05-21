@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from librarian.corpus import discover_books, iter_sections, _SKIP
+from librarian.corpus import discover_books, iter_sections, _SKIP, _chapter_title, split_sections
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -30,3 +30,30 @@ def test_skip_regex_matches_frontmatter_not_content():
     for stem in ("09-thinking-about-the-reader", "12-cover-letters",
                  "01-the-first-chapter", "07-writing-the-foreword"):
         assert not _SKIP.search(stem), stem
+
+
+_H2_CHAPTER = """\
+## Chapter 3. An Introduction to the Tools
+
+*An epigraph.*
+
+### Stop Me If You've Heard This
+
+First section body.
+
+### A Minimal Introduction
+
+Second section body.
+"""
+
+
+def test_chapter_title_handles_h2_chapter_heading():
+    assert _chapter_title(_H2_CHAPTER, fallback="06-ch03") == \
+        "Chapter 3. An Introduction to the Tools"
+
+
+def test_split_sections_skips_chapter_title_at_any_level():
+    headings = [s.heading for s in split_sections(_H2_CHAPTER)]
+    assert "Chapter 3. An Introduction to the Tools" not in headings
+    assert headings == ["Introduction", "Stop Me If You've Heard This",
+                        "A Minimal Introduction"]

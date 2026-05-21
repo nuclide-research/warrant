@@ -28,6 +28,10 @@ def save_index(index: Index, out_dir) -> None:
         raise ValueError(
             f"principles/embeddings length mismatch: "
             f"{len(index.principles)} vs {index.embeddings.shape[0]}")
+    safe_names = [_safe(p.id) for p in index.principles]
+    if len(set(safe_names)) != len(safe_names):
+        raise ValueError("principle id collision: distinct principles map "
+                         "to the same index filename")
     out = Path(out_dir)
     (out / "principles").mkdir(parents=True, exist_ok=True)
     for stale in (out / "principles").glob("*.json"):
