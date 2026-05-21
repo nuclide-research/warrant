@@ -15,12 +15,23 @@ class Index:
 
 
 def _safe(pid: str) -> str:
+    """Map a principle id to a safe filename. Known limitation: extract.py
+    truncates slug components to 50 chars, so two sections in one chapter
+    whose headings share a 50-char prefix can produce the same id and thus
+    the same filename, silently overwriting. Acceptable for the current
+    corpus; revisit before large-scale indexing."""
     return pid.replace(":", "__").replace("/", "_")
 
 
 def save_index(index: Index, out_dir) -> None:
+    if len(index.principles) != index.embeddings.shape[0]:
+        raise ValueError(
+            f"principles/embeddings length mismatch: "
+            f"{len(index.principles)} vs {index.embeddings.shape[0]}")
     out = Path(out_dir)
     (out / "principles").mkdir(parents=True, exist_ok=True)
+    for stale in (out / "principles").glob("*.json"):
+        stale.unlink()
     order = []
     for p in index.principles:
         (out / "principles" / f"{_safe(p.id)}.json").write_text(
