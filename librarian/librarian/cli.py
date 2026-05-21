@@ -1,6 +1,7 @@
 import argparse
 import json
 import sys
+from pathlib import Path
 
 from .embedding import Embedder
 from .indexer import build_index
@@ -26,6 +27,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def _cmd_index(args) -> int:
+    if not Path(args.library).is_dir():
+        sys.exit(f"error: library directory not found: {args.library}")
     index = build_index(args.library, AnthropicLLM(), Embedder())
     save_index(index, args.out)
     print(f"indexed {len(index.principles)} principles, "
@@ -34,6 +37,8 @@ def _cmd_index(args) -> int:
 
 
 def _cmd_query(args) -> int:
+    if not (Path(args.index) / "manifest.json").is_file():
+        sys.exit(f"error: no index at {args.index} (run `librarian index` first)")
     index = load_index(args.index)
     results = query_index(index, args.text, Embedder(), Reranker(), k=args.k)
     print(json.dumps([
@@ -51,7 +56,3 @@ def _cmd_query(args) -> int:
 def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
     return {"index": _cmd_index, "query": _cmd_query}[args.command](args)
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
