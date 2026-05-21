@@ -11,7 +11,10 @@ class AnthropicLLM:
         self.max_tokens = max_tokens
         if client is None:
             import anthropic
-            client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+            api_key = os.environ.get("ANTHROPIC_API_KEY")
+            if not api_key:
+                raise RuntimeError("ANTHROPIC_API_KEY environment variable is not set")
+            client = anthropic.Anthropic(api_key=api_key)
         self._client = client
 
     def complete(self, prompt: str) -> str:

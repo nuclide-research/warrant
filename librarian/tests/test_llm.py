@@ -29,4 +29,4 @@ def test_anthropic_llm_sends_prompt_and_returns_text():
     assert out == "STUB RESPONSE"
     assert rec["model"] == "claude-sonnet-4-6"
     assert rec["messages"][0]["content"] == "hello"
-    assert rec["max_tokens"] >= 1
+    assert rec["max_tokens"] == llm.max_tokens
