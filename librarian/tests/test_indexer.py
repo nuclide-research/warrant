@@ -42,3 +42,11 @@ def test_build_index_skips_malformed_sections(capsys):
     assert len(index.principles) == 2
     assert {p.statement for p in index.principles} == {"Good A.", "Good C."}
     assert "skipping" in capsys.readouterr().err
+
+
+def test_build_index_empty_library(tmp_path):
+    llm = FakeLLM([])  # no calls expected
+    index = build_index(tmp_path, llm, FakeEmbedder())
+    assert index.principles == []
+    assert index.edges == []
+    assert index.embeddings.shape[0] == 0

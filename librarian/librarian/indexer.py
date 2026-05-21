@@ -16,7 +16,7 @@ def build_index(library_dir, llm, embedder) -> Index:
         try:
             principles.extend(extract_principles(book, chapter, section, llm))
         except (ValueError, KeyError) as e:
-            print(f"warning: skipping {book.isbn} / {chapter} / "
+            print(f"warning: skipping {book.title} ({book.isbn}) / {chapter} / "
                   f"{section.heading}: malformed LLM response ({e})",
                   file=sys.stderr)
 
