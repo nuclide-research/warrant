@@ -13,7 +13,7 @@ class Embedder:
 
     def encode(self, texts: list[str]) -> np.ndarray:
         if not texts:
-            return np.zeros((0, self._model.get_sentence_embedding_dimension()),
+            return np.zeros((0, self._model.get_embedding_dimension()),
                             dtype=np.float32)
         return self._model.encode(texts, normalize_embeddings=True,
                                   convert_to_numpy=True).astype(np.float32)
