@@ -4,10 +4,17 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterator
 
-# colophon frontmatter/back-matter files to skip when reading chapters.
-_SKIP = re.compile(r"titlepage|copyright|^0?1-cover|table-of-contents|dedication|"
-                   r"acknowledg|preface|foreword|^.*-index$|navigation|why-subscribe|"
-                   r"contributors|about-the", re.IGNORECASE)
+# colophon frontmatter/back-matter files to skip. Match the *whole* stem
+# (optional NN- prefix only) so a content chapter whose title merely
+# contains a frontmatter word — "thinking-about-the-reader" — is not dropped.
+_SKIP = re.compile(
+    r"^(?:\d+-)?(?:"
+    r"cover|titlepage|halftitle|copyright|toc|table-of-contents|"
+    r"dedication|preface|foreword|navigation|why-subscribe|frontmatter|"
+    r"contributors|about-the-authors?|acknowledg\w*|index"
+    r")$",
+    re.IGNORECASE,
+)
 
 
 @dataclass(frozen=True)
@@ -30,8 +37,12 @@ def discover_books(library_dir) -> list[Book]:
         meta = d / "book.json"
         if not (d.is_dir() and meta.exists()):
             continue
-        data = json.loads(meta.read_text())
-        books.append(Book(isbn=data["isbn"], title=data.get("title", d.name), path=d))
+        try:
+            data = json.loads(meta.read_text())
+            isbn = data["isbn"]
+        except (json.JSONDecodeError, KeyError) as e:
+            raise ValueError(f"bad book.json in {d}: {e}") from e
+        books.append(Book(isbn=isbn, title=data.get("title", d.name), path=d))
     return books
 
 
