@@ -25,7 +25,8 @@ def test_iter_sections_yields_chapter_and_section_context():
 
 def test_skip_regex_matches_frontmatter_not_content():
     for stem in ("02-copyright", "01-cover", "30-index", "04-about-the-author",
-                 "00-titlepage", "03-table-of-contents", "05-acknowledgments"):
+                 "00-titlepage", "03-table-of-contents", "05-acknowledgments",
+                 "04-dedication01", "24-toc01"):
         assert _SKIP.search(stem), stem
     for stem in ("09-thinking-about-the-reader", "12-cover-letters",
                  "01-the-first-chapter", "07-writing-the-foreword"):

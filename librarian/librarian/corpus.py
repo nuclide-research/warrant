@@ -12,7 +12,7 @@ _SKIP = re.compile(
     r"cover|titlepage|halftitle|copyright|toc|table-of-contents|"
     r"dedication|preface|foreword|navigation|why-subscribe|frontmatter|"
     r"contributors|about-the-authors?|acknowledg\w*|index"
-    r")$",
+    r")\d*$",
     re.IGNORECASE,
 )
 
