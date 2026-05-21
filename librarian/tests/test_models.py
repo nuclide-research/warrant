@@ -1,3 +1,5 @@
+import pytest
+
 from librarian.models import Citation, Principle, Edge, principle_to_dict, principle_from_dict
 
 
@@ -15,7 +17,6 @@ def test_principle_round_trips_through_dict():
 
 
 def test_edge_kind_is_constrained():
-    import pytest
     with pytest.raises(ValueError):
         Edge(src="a", dst="b", kind="bogus")
     assert Edge(src="a", dst="b", kind="contradicts").kind == "contradicts"

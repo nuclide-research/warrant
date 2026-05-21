@@ -32,7 +32,7 @@ class Edge:
 
 
 def principle_to_dict(p: Principle) -> dict:
-    return {**asdict(p), "citation": asdict(p.citation)}
+    return asdict(p)
 
 
 def principle_from_dict(d: dict) -> Principle:
