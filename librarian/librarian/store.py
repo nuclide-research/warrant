@@ -15,11 +15,9 @@ class Index:
 
 
 def _safe(pid: str) -> str:
-    """Map a principle id to a safe filename. Known limitation: extract.py
-    truncates slug components to 50 chars, so two sections in one chapter
-    whose headings share a 50-char prefix can produce the same id and thus
-    the same filename, silently overwriting. Acceptable for the current
-    corpus; revisit before large-scale indexing."""
+    """Map a principle id to a safe filename. Principle ids carry the section
+    index, so two distinct sections cannot produce the same id; the collision
+    check in save_index is a backstop, not an expected path."""
     return pid.replace(":", "__").replace("/", "_")
 
 

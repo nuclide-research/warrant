@@ -30,8 +30,8 @@ def test_index_save_load_query_round_trip(tmp_path):
         principles_json([{"statement": "Section two principle.",
                           "checkability_tier": 2, "evidence_chunk": "two"}]),
         principles_json([]),
-        json.dumps([{"src": "9999999999999:the-first-chapter:introduction:1",
-                     "dst": "9999999999999:the-first-chapter:section-one:1",
+        json.dumps([{"src": "9999999999999:the-first-chapter:introduction:0:1",
+                     "dst": "9999999999999:the-first-chapter:section-one:1:1",
                      "kind": "shares_topic"}]),
     ])
     index = build_index(FIXTURES, llm, FakeEmbedder())

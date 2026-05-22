@@ -24,7 +24,7 @@ def test_extract_principles_parses_llm_json_into_principles():
     assert p.citation.isbn == "9781633437166"
     assert p.citation.chapter == "Typography and spacing"
     assert p.citation.section == "12.1.1 Using ems vs px"
-    assert p.id == "9781633437166:typography-and-spacing:12-1-1-using-ems-vs-px:1"
+    assert p.id == "9781633437166:typography-and-spacing:12-1-1-using-ems-vs-px:0:1"
 
 
 def test_extract_principles_tolerates_fenced_json():
@@ -48,3 +48,14 @@ def test_extract_principles_rejects_bad_tier():
         {"statement": "x", "checkability_tier": 9, "evidence_chunk": "y"}])])
     with pytest.raises(ValueError):
         extract_principles(BOOK, "Ch", SECTION, llm)
+
+
+def test_extract_principles_section_index_disambiguates_ids():
+    # two sections sharing a chapter and heading must not collide
+    a = extract_principles(BOOK, "Ch", SECTION, FakeLLM([principles_json([
+        {"statement": "X.", "checkability_tier": 1, "evidence_chunk": "e"}])]),
+        section_index=3)
+    b = extract_principles(BOOK, "Ch", SECTION, FakeLLM([principles_json([
+        {"statement": "Y.", "checkability_tier": 1, "evidence_chunk": "e"}])]),
+        section_index=4)
+    assert a[0].id != b[0].id

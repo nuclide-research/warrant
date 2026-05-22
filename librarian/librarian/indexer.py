@@ -13,9 +13,10 @@ def build_index(library_dir, llm, embedder) -> Index:
     fails, the index is still built without a principle graph. Neither is
     allowed to abort the whole build."""
     principles = []
-    for book, chapter, section in iter_sections(library_dir):
+    for section_index, (book, chapter, section) in enumerate(iter_sections(library_dir)):
         try:
-            principles.extend(extract_principles(book, chapter, section, llm))
+            principles.extend(
+                extract_principles(book, chapter, section, llm, section_index))
         except (ValueError, KeyError) as e:
             print(f"warning: skipping {book.title} ({book.isbn}) / {chapter} / "
                   f"{section.heading}: malformed LLM response ({e})",

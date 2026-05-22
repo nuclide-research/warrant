@@ -49,7 +49,11 @@ def _parse_json_array(raw: str) -> list[dict]:
     return data
 
 
-def extract_principles(book: Book, chapter: str, section: Section, llm: LLM) -> list[Principle]:
+def extract_principles(book: Book, chapter: str, section: Section, llm: LLM,
+                       section_index: int = 0) -> list[Principle]:
+    """Extract principles from one section. section_index is the section's
+    position in the book; it disambiguates the principle id when two sections
+    in a chapter share a heading (or slug-collide after truncation)."""
     prompt = _PROMPT.format(book=book.title, chapter=chapter,
                             section=section.heading, text=section.text)
     items = _parse_json_array(llm.complete(prompt))
@@ -58,7 +62,7 @@ def extract_principles(book: Book, chapter: str, section: Section, llm: LLM) -> 
         tier = int(item["checkability_tier"])
         if tier not in (1, 2, 3):
             raise ValueError(f"bad checkability_tier {tier}")
-        pid = f"{book.isbn}:{_slug(chapter)}:{_slug(section.heading)}:{n}"
+        pid = f"{book.isbn}:{_slug(chapter)}:{_slug(section.heading)}:{section_index}:{n}"
         out.append(Principle(
             id=pid,
             statement=item["statement"].strip(),
