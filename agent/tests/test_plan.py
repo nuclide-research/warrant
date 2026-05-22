@@ -185,3 +185,40 @@ def test_plan_node_with_optional_fields():
     assert node.depends_on == ("n1",)
     assert node.amended_from == "n4-old"
     assert node.children == ("n5", "n6")
+
+
+from agent.plan import Plan
+
+
+def _make_node(node_id: str) -> PlanNode:
+    return PlanNode(
+        id=node_id,
+        level="architectural",
+        decision=f"Decision for {node_id}",
+        approach=f"Approach for {node_id}",
+        grounds=("p1",),
+        grounds_state="clean",
+    )
+
+
+def test_plan_minimal_valid():
+    plan = Plan(plan_id="abc123", task="Build a thing", version=1, nodes=())
+    assert plan.plan_id == "abc123"
+    assert plan.task == "Build a thing"
+    assert plan.version == 1
+    assert plan.nodes == ()
+
+
+def test_plan_with_nodes():
+    n1 = _make_node("n1")
+    n2 = _make_node("n2")
+    plan = Plan(plan_id="abc123", task="Build a thing", version=2, nodes=(n1, n2))
+    assert len(plan.nodes) == 2
+    assert plan.nodes[0].id == "n1"
+    assert plan.nodes[1].id == "n2"
+
+
+def test_plan_is_frozen():
+    plan = Plan(plan_id="abc123", task="Build a thing", version=1, nodes=())
+    with pytest.raises(Exception):
+        plan.version = 2  # type: ignore[misc]

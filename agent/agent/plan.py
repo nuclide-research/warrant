@@ -65,3 +65,11 @@ class PlanNode:
                 raise ValueError(
                     "grounds_state 'ungrounded' requires a non-empty grounds_note"
                 )
+
+
+@dataclass(frozen=True)
+class Plan:
+    plan_id: str
+    task: str
+    version: int
+    nodes: tuple[PlanNode, ...]
