@@ -1,5 +1,5 @@
 import pytest
-from agent.plan import LEVELS, GROUNDS_STATES, PROVENANCE, ApplicableCheck, PlanNode
+from agent.plan import LEVELS, GROUNDS_STATES, PROVENANCE, ApplicableCheck, Plan, PlanNode
 
 
 def test_constants_are_tuples_of_strings():
@@ -185,9 +185,6 @@ def test_plan_node_with_optional_fields():
     assert node.depends_on == ("n1",)
     assert node.amended_from == "n4-old"
     assert node.children == ("n5", "n6")
-
-
-from agent.plan import Plan
 
 
 def _make_node(node_id: str) -> PlanNode:
