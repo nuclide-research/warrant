@@ -50,3 +50,20 @@ def test_build_index_empty_library(tmp_path):
     assert index.principles == []
     assert index.edges == []
     assert index.embeddings.shape[0] == 0
+
+
+def test_build_index_survives_malformed_edge_response(capsys):
+    # every section extracts fine; the edge call returns non-JSON -> the graph
+    # is dropped but the index is still built, not aborted
+    llm = FakeLLM([
+        principles_json([{"statement": "P one.", "checkability_tier": 1,
+                          "evidence_chunk": "a"}]),
+        principles_json([{"statement": "P two.", "checkability_tier": 2,
+                          "evidence_chunk": "b"}]),
+        principles_json([]),
+        "not valid json",  # edge-extraction call
+    ])
+    index = build_index(FIXTURES, llm, FakeEmbedder())
+    assert len(index.principles) == 2
+    assert index.edges == []
+    assert "edge extraction failed" in capsys.readouterr().err

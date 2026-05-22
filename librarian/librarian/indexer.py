@@ -9,8 +9,9 @@ from .store import Index
 def build_index(library_dir, llm, embedder) -> Index:
     """Walk the library: one extraction pass per section, one edge pass over
     all principles, then embed every principle statement. A section whose LLM
-    response is malformed is skipped with a warning, not allowed to abort the
-    whole build."""
+    response is malformed is skipped with a warning; if the edge pass itself
+    fails, the index is still built without a principle graph. Neither is
+    allowed to abort the whole build."""
     principles = []
     for book, chapter, section in iter_sections(library_dir):
         try:
@@ -20,6 +21,12 @@ def build_index(library_dir, llm, embedder) -> Index:
                   f"{section.heading}: malformed LLM response ({e})",
                   file=sys.stderr)
 
-    edges = extract_edges(principles, llm) if principles else []
+    edges: list = []
+    if principles:
+        try:
+            edges = extract_edges(principles, llm)
+        except (ValueError, KeyError) as e:
+            print(f"warning: edge extraction failed, building index with no "
+                  f"principle graph ({e})", file=sys.stderr)
     embeddings = embedder.encode([p.statement for p in principles])
     return Index(principles=principles, embeddings=embeddings, edges=edges)
