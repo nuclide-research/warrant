@@ -156,3 +156,24 @@ def test_next_version_does_not_mutate_original():
     plan = new_plan("task")
     next_version(plan)
     assert plan.version == 1
+
+
+def test_amend_node_rejects_id_in_changes():
+    plan = new_plan("task")
+    plan = add_node(plan, _make_node("n1"))
+    with pytest.raises(ValueError, match="id"):
+        amend_node(plan, "n1", "reason", id="n2")
+
+
+def test_amend_node_rejects_amended_from_in_changes():
+    plan = new_plan("task")
+    plan = add_node(plan, _make_node("n1"))
+    with pytest.raises(ValueError, match="amended_from"):
+        amend_node(plan, "n1", "reason", amended_from="forged")
+
+
+def test_amend_node_rejects_amended_reason_in_changes():
+    plan = new_plan("task")
+    plan = add_node(plan, _make_node("n1"))
+    with pytest.raises(ValueError, match="amended_reason"):
+        amend_node(plan, "n1", "reason", amended_reason="forged")

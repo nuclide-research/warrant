@@ -24,6 +24,11 @@ def add_node(plan: Plan, node: PlanNode) -> Plan:
 
 
 def amend_node(plan: Plan, node_id: str, reason: str, **changes: Any) -> Plan:
+    forbidden = {"id", "amended_from", "amended_reason"} & changes.keys()
+    if forbidden:
+        raise ValueError(
+            f"amend_node manages these fields; they may not be passed as changes: {sorted(forbidden)}"
+        )
     found = False
     new_nodes = []
     for node in plan.nodes:
