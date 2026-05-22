@@ -1,0 +1,47 @@
+from __future__ import annotations
+
+import dataclasses
+import uuid
+from typing import Any
+
+from .plan import Plan, PlanNode
+
+
+def new_plan(task: str) -> Plan:
+    return Plan(
+        plan_id=uuid.uuid4().hex,
+        task=task,
+        version=1,
+        nodes=(),
+    )
+
+
+def add_node(plan: Plan, node: PlanNode) -> Plan:
+    existing_ids = {n.id for n in plan.nodes}
+    if node.id in existing_ids:
+        raise ValueError(f"Node id {node.id!r} already exists in the plan")
+    return dataclasses.replace(plan, nodes=(*plan.nodes, node))
+
+
+def amend_node(plan: Plan, node_id: str, reason: str, **changes: Any) -> Plan:
+    found = False
+    new_nodes = []
+    for node in plan.nodes:
+        if node.id == node_id:
+            found = True
+            amended = dataclasses.replace(
+                node,
+                amended_from=node_id,
+                amended_reason=reason,
+                **changes,
+            )
+            new_nodes.append(amended)
+        else:
+            new_nodes.append(node)
+    if not found:
+        raise ValueError(f"Node id {node_id!r} not found in the plan")
+    return dataclasses.replace(plan, nodes=tuple(new_nodes))
+
+
+def next_version(plan: Plan) -> Plan:
+    return dataclasses.replace(plan, version=plan.version + 1)
