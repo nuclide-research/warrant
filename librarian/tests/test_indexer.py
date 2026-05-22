@@ -66,4 +66,4 @@ def test_build_index_survives_malformed_edge_response(capsys):
     index = build_index(FIXTURES, llm, FakeEmbedder())
     assert len(index.principles) == 2
     assert index.edges == []
-    assert "edge extraction failed" in capsys.readouterr().err
+    assert "skipped" in capsys.readouterr().err

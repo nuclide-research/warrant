@@ -22,12 +22,12 @@ def build_index(library_dir, llm, embedder) -> Index:
                   f"{section.heading}: malformed LLM response ({e})",
                   file=sys.stderr)
 
+    embeddings = embedder.encode([p.statement for p in principles])
     edges: list = []
     if principles:
         try:
-            edges = extract_edges(principles, llm)
+            edges = extract_edges(principles, embeddings, llm)
         except (ValueError, KeyError) as e:
             print(f"warning: edge extraction failed, building index with no "
                   f"principle graph ({e})", file=sys.stderr)
-    embeddings = embedder.encode([p.statement for p in principles])
     return Index(principles=principles, embeddings=embeddings, edges=edges)
