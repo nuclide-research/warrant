@@ -1,6 +1,7 @@
+import json
 import pytest
 from agent.plan import ApplicableCheck, Plan, PlanNode
-from agent.planstore import plan_from_dict, plan_to_dict
+from agent.planstore import load_latest, load_version, plan_from_dict, plan_to_dict, save_plan
 
 
 def _make_plan() -> Plan:
@@ -111,3 +112,71 @@ def test_plan_round_trips_conflicted_node():
     assert n.grounds_state == "conflicted"
     assert n.conflict_resolution.startswith("p10 wins")
     assert n.grounds == ("p10", "p11")
+
+
+def _simple_plan(version: int = 1) -> Plan:
+    node = PlanNode(
+        id="n1",
+        level="architectural",
+        decision="Top-level decision",
+        approach="Standard approach",
+        grounds=("p1",),
+        grounds_state="clean",
+    )
+    return Plan(plan_id="test-plan-001", task="Test task", version=version, nodes=(node,))
+
+
+def test_save_plan_creates_versioned_file(tmp_path):
+    plan = _simple_plan(version=1)
+    save_plan(plan, tmp_path)
+    expected = tmp_path / "plan.v1.json"
+    assert expected.exists()
+
+
+def test_save_plan_creates_out_dir_if_missing(tmp_path):
+    target = tmp_path / "nested" / "plans"
+    plan = _simple_plan(version=1)
+    save_plan(plan, target)
+    assert (target / "plan.v1.json").exists()
+
+
+def test_save_plan_writes_valid_json(tmp_path):
+    save_plan(_simple_plan(version=2), tmp_path)
+    raw = (tmp_path / "plan.v2.json").read_text()
+    parsed = json.loads(raw)
+    assert parsed["version"] == 2
+    assert parsed["plan_id"] == "test-plan-001"
+
+
+def test_load_version_round_trips(tmp_path):
+    original = _simple_plan(version=3)
+    save_plan(original, tmp_path)
+    loaded = load_version(tmp_path, 3)
+    assert loaded.plan_id == original.plan_id
+    assert loaded.version == 3
+    assert loaded.nodes[0].id == "n1"
+
+
+def test_load_version_raises_on_missing(tmp_path):
+    with pytest.raises(FileNotFoundError):
+        load_version(tmp_path, 99)
+
+
+def test_load_latest_returns_highest_version(tmp_path):
+    save_plan(_simple_plan(version=1), tmp_path)
+    save_plan(_simple_plan(version=3), tmp_path)
+    save_plan(_simple_plan(version=2), tmp_path)
+    latest = load_latest(tmp_path)
+    assert latest.version == 3
+
+
+def test_load_latest_raises_on_empty_dir(tmp_path):
+    with pytest.raises(FileNotFoundError):
+        load_latest(tmp_path)
+
+
+def test_save_plan_file_is_human_readable(tmp_path):
+    save_plan(_simple_plan(version=1), tmp_path)
+    raw = (tmp_path / "plan.v1.json").read_text()
+    # Indented JSON — must have newlines
+    assert "\n" in raw

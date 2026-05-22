@@ -64,3 +64,33 @@ def _node_from_dict(d: dict) -> PlanNode:
         amended_reason=d.get("amended_reason"),
         children=tuple(d.get("children", [])),
     )
+
+
+def save_plan(plan: Plan, out_dir) -> None:
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    filename = out / f"plan.v{plan.version}.json"
+    filename.write_text(json.dumps(plan_to_dict(plan), indent=2))
+
+
+def load_version(out_dir, version: int) -> Plan:
+    out = Path(out_dir)
+    filename = out / f"plan.v{version}.json"
+    if not filename.exists():
+        raise FileNotFoundError(f"No plan version {version} at {out_dir}")
+    return plan_from_dict(json.loads(filename.read_text()))
+
+
+def load_latest(out_dir) -> Plan:
+    out = Path(out_dir)
+    candidates = list(out.glob("plan.v*.json"))
+    if not candidates:
+        raise FileNotFoundError(f"No plan files found in {out_dir}")
+
+    def _version_num(p: Path) -> int:
+        # extract the integer between "plan.v" and ".json"
+        stem = p.stem  # e.g. "plan.v3"
+        return int(stem.split(".v")[1])
+
+    latest = max(candidates, key=_version_num)
+    return plan_from_dict(json.loads(latest.read_text()))
