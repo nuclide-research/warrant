@@ -50,3 +50,30 @@ def amend_node(plan: Plan, node_id: str, reason: str, **changes: Any) -> Plan:
 
 def next_version(plan: Plan) -> Plan:
     return dataclasses.replace(plan, version=plan.version + 1)
+
+
+def find_node(plan: Plan, node_id: str) -> PlanNode | None:
+    for node in plan.nodes:
+        if node.id == node_id:
+            return node
+    return None
+
+
+def children(plan: Plan, node: PlanNode) -> list[PlanNode]:
+    result = []
+    for child_id in node.children:
+        child = find_node(plan, child_id)
+        if child is not None:
+            result.append(child)
+    return result
+
+
+def independent_siblings(plan: Plan, node_ids: list[str]) -> bool:
+    id_set = set(node_ids)
+    for node in plan.nodes:
+        if node.id not in id_set:
+            continue
+        for dep in node.depends_on:
+            if dep in id_set:
+                return False
+    return True

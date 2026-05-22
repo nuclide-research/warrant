@@ -1,6 +1,6 @@
 import pytest
 from agent.plan import ApplicableCheck, Plan, PlanNode
-from agent.planops import add_node, amend_node, new_plan, next_version
+from agent.planops import add_node, amend_node, children, find_node, independent_siblings, new_plan, next_version
 
 
 def _make_node(node_id: str, *, level: str = "architectural", **kwargs) -> PlanNode:
@@ -177,3 +177,143 @@ def test_amend_node_rejects_amended_reason_in_changes():
     plan = add_node(plan, _make_node("n1"))
     with pytest.raises(ValueError, match="amended_reason"):
         amend_node(plan, "n1", "reason", amended_reason="forged")
+
+
+# --- query operations ---
+
+def _plan_with_nodes(*node_ids: str) -> Plan:
+    """Build a plan containing one clean node per id."""
+    plan = new_plan("query test")
+    for nid in node_ids:
+        plan = add_node(plan, _make_node(nid))
+    return plan
+
+
+# --- find_node ---
+
+def test_find_node_returns_node_when_present():
+    plan = _plan_with_nodes("n1", "n2", "n3")
+    node = find_node(plan, "n2")
+    assert node is not None
+    assert node.id == "n2"
+
+
+def test_find_node_returns_none_when_missing():
+    plan = _plan_with_nodes("n1", "n2")
+    assert find_node(plan, "n99") is None
+
+
+def test_find_node_works_on_empty_plan():
+    plan = new_plan("empty")
+    assert find_node(plan, "n1") is None
+
+
+# --- children ---
+
+def test_children_resolves_ids_to_nodes():
+    plan = _plan_with_nodes("n1", "n2", "n3")
+    # manually build a parent node that references n2 and n3 as children
+    parent = PlanNode(
+        id="root",
+        level="architectural",
+        decision="root decision",
+        approach="root approach",
+        grounds=("p1",),
+        grounds_state="clean",
+        children=("n2", "n3"),
+    )
+    plan = add_node(plan, parent)
+    result = children(plan, parent)
+    assert len(result) == 2
+    ids = {n.id for n in result}
+    assert ids == {"n2", "n3"}
+
+
+def test_children_skips_ids_not_in_plan():
+    plan = _plan_with_nodes("n1", "n2")
+    parent = PlanNode(
+        id="root",
+        level="architectural",
+        decision="root",
+        approach="root",
+        grounds=("p1",),
+        grounds_state="clean",
+        children=("n1", "n99"),  # n99 does not exist
+    )
+    plan = add_node(plan, parent)
+    result = children(plan, parent)
+    assert len(result) == 1
+    assert result[0].id == "n1"
+
+
+def test_children_empty_when_no_children():
+    plan = _plan_with_nodes("n1")
+    node = find_node(plan, "n1")
+    assert children(plan, node) == []
+
+
+# --- independent_siblings ---
+
+def test_independent_siblings_true_when_no_cross_depends():
+    # n1 and n2 do not depend on each other
+    plan = new_plan("task")
+    plan = add_node(plan, PlanNode(
+        id="n1", level="implementation", decision="d1", approach="a1",
+        grounds=("p1",), grounds_state="clean",
+        depends_on=("root",),
+    ))
+    plan = add_node(plan, PlanNode(
+        id="n2", level="implementation", decision="d2", approach="a2",
+        grounds=("p1",), grounds_state="clean",
+        depends_on=("root",),
+    ))
+    assert independent_siblings(plan, ["n1", "n2"]) is True
+
+
+def test_independent_siblings_false_when_one_depends_on_other():
+    plan = new_plan("task")
+    plan = add_node(plan, _make_node("n1"))
+    plan = add_node(plan, PlanNode(
+        id="n2", level="implementation", decision="d2", approach="a2",
+        grounds=("p1",), grounds_state="clean",
+        depends_on=("n1",),  # n2 depends on n1
+    ))
+    assert independent_siblings(plan, ["n1", "n2"]) is False
+
+
+def test_independent_siblings_false_when_reverse_depends():
+    # n1 depends on n2 — still not independent
+    plan = new_plan("task")
+    plan = add_node(plan, PlanNode(
+        id="n1", level="implementation", decision="d1", approach="a1",
+        grounds=("p1",), grounds_state="clean",
+        depends_on=("n2",),
+    ))
+    plan = add_node(plan, _make_node("n2"))
+    assert independent_siblings(plan, ["n1", "n2"]) is False
+
+
+def test_independent_siblings_true_for_single_node():
+    plan = _plan_with_nodes("n1")
+    assert independent_siblings(plan, ["n1"]) is True
+
+
+def test_independent_siblings_true_for_empty_list():
+    plan = new_plan("task")
+    assert independent_siblings(plan, []) is True
+
+
+def test_independent_siblings_ignores_depends_on_outside_the_set():
+    # n1 and n2 both depend on an external node "root" — not in the set
+    plan = new_plan("task")
+    plan = add_node(plan, PlanNode(
+        id="n1", level="implementation", decision="d1", approach="a1",
+        grounds=("p1",), grounds_state="clean",
+        depends_on=("root",),
+    ))
+    plan = add_node(plan, PlanNode(
+        id="n2", level="implementation", decision="d2", approach="a2",
+        grounds=("p1",), grounds_state="clean",
+        depends_on=("root",),
+    ))
+    assert independent_siblings(plan, ["n1", "n2"]) is True
