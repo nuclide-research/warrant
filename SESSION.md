@@ -9,9 +9,9 @@ books, given a single direction. Built as separate artifacts, one at a time:
 no-sandbox variant Nick floated, **C** a shareable kit). Design spec:
 `docs/superpowers/specs/2026-05-21-warrant-design.md`.
 
-Artifact A has two parts: the **Librarian** (the retrieval engine, done) and the
-**Agent** (the autonomous loop that uses it). The Agent is being built as four
-sequential plans; plans 1–3 of 4 are done.
+**Artifact A is complete.** The Librarian (retrieval engine) and the Agent
+(autonomous loop, all 4 plans) are done and on `main`. The skill is invokable
+as `/warrant <direction>` in any Claude Code session with a `.warrant/config.json`.
 
 ## Done — the Librarian (Artifact A's retrieval engine)
 
@@ -111,13 +111,44 @@ now drives Orient → Retrieve → Plan → Execute → Verify and returns
   `git ls-files -z` not `git status --short`); exhausted-phase spin in
   `_execute_verify_loop` (break when `phase == "exhausted"`).
 
+## Done — the Agent, plan 4 of 4: skill wrapper
+
+Wires `WarrantRunner` to real Claude CLI invocations and delivers the `/warrant`
+Claude Code skill entry point. Artifact A is now fully complete.
+
+- Built via `superpowers:subagent-driven-development` from the 4-task plan
+  `docs/superpowers/plans/2026-05-24-warrant-skill-wrapper.md`. Design spec:
+  `docs/superpowers/specs/2026-05-24-warrant-skill-wrapper-design.md`.
+- Merged to `main` (branch `skill-wrapper`, fast-forward, then deleted).
+  109 tests pass. HEAD `bfcf95b`.
+- New subpackage `loop/loop/skill/` with three modules:
+  - `invokers.py`: `ClaudeCodeLLM` (callable LLM), `ClaudeCodeInvoker`
+    (Invoker protocol), `ClaudeCodeVerifierInvoker` (VerifierInvoker protocol).
+    All call `claude -p <prompt>` via subprocess. `_extract_json` strips markdown
+    fences and falls back to brace extraction. Synthetic failed/clean results on
+    parse failure prevent routing loops.
+  - `factory.py`: `Config` dataclass (11 fields with defaults), `load_config()`
+    (reads JSON, ignores unknown keys), `build_runner()` (assembles
+    `WarrantRunner` from config).
+  - `__main__.py`: `run` and `resume` subcommands via argparse. Dispatches to
+    `runner.run(direction)` or `runner.resume(run_state)`, prints citation report
+    + worktree path.
+- `SKILL.md` at repo root: thin Claude Code skill wrapper. Checks for
+  `.warrant/config.json`, dispatches `/warrant resume` to the resume subcommand
+  (conditional on `$ARGUMENTS = "resume"`), otherwise runs the agent.
+- `.warrant/config.example.json` documents all 9 required + optional fields.
+- One integration bug caught by final whole-implementation review: SKILL.md
+  was unconditionally calling `loop.skill run` even on `/warrant resume`,
+  so the resume path would have started a new run with direction="resume".
+  Fixed with a bash conditional before merge.
+
 ## Open / next
 
-1. **The Warrant skill wrapper (plan 4).** `SKILL.md` + `ClaudeCodeInvoker` +
-   `ClaudeCodeVerifierInvoker`. Wires the runner into a Claude Code skill invoked
-   with a single direction string.
-2. Artifacts B and C, after A.
-3. Optional: live re-verify of Librarian edge extraction on a real book.
+1. Artifacts B (standalone CLI / "wild Bill" no-sandbox variant) and C
+   (shareable kit), now that Artifact A is complete.
+2. Optional: live re-verify of Librarian edge extraction on a real book.
+3. Optional: end-to-end live test of the full `/warrant <direction>` skill
+   against a real codebase with a built Librarian index.
 
 ## Notes
 
@@ -125,4 +156,7 @@ now drives Orient → Retrieve → Plan → Execute → Verify and returns
   (full book text is copyrighted).
 - The Tier-1 *check compiler* is deliberately out of scope — its own future
   sub-project; `checkability_tier` is populated but not compiled.
-- `~/warrant` has no git remote; work lands on `main` locally.
+- `~/warrant` has a GitHub remote: `https://github.com/Nicholas-Kloster/warrant`
+- To use the skill: build a Librarian index, copy `.warrant/config.example.json`
+  to `.warrant/config.json` in your project, fill in `index_path` and
+  `base_repo`, then invoke `/warrant <direction>` in Claude Code.
