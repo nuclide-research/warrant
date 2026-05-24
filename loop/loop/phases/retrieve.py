@@ -1,4 +1,5 @@
 from __future__ import annotations
+import dataclasses
 import json
 from pathlib import Path
 
@@ -15,6 +16,9 @@ def retrieve(
     worktree_path: str,
     max_principles: int = 15,
 ) -> list[Result]:
+    if not queries:
+        return []
+
     seen: dict[str, Result] = {}
     for query in queries:
         results = query_index(index, query, embedder, reranker, k=SEMANTIC_POOL)
@@ -26,9 +30,12 @@ def retrieve(
     merged = list(seen.values())
     combined_query = " ".join(queries)
     reranked_pairs = reranker.rerank(combined_query, [r.principle for r in merged])
-    reranked_ids = [p.id for p, _ in reranked_pairs]
     id_to_result = {r.principle.id: r for r in merged}
-    ordered = [id_to_result[pid] for pid in reranked_ids if pid in id_to_result]
+    ordered = []
+    for p, new_score in reranked_pairs:
+        r = id_to_result.get(p.id)
+        if r is not None:
+            ordered.append(dataclasses.replace(r, score=new_score))
     top = ordered[:max_principles]
 
     warrant_dir = Path(worktree_path) / ".warrant"
