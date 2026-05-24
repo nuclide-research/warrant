@@ -9,13 +9,11 @@ allowed-tools: Bash
 
 Accept the direction from `$ARGUMENTS`.
 
-First, verify that `.warrant/config.json` exists in the current directory:
+First, verify that `.warrant/config.json` exists in the current directory. If it is missing, run the following check — it will print setup instructions and exit:
 
 ```bash
 test -f .warrant/config.json || { echo "No .warrant/config.json found. Copy .warrant/config.example.json, fill in index_path and base_repo, then re-run."; exit 1; }
 ```
-
-If the config is missing, explain the setup and stop — do not proceed.
 
 To start a new run:
 
