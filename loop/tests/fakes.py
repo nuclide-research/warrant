@@ -1,6 +1,6 @@
 from __future__ import annotations
 import numpy as np
-from loop.models import ExecutorResult, CheckResult
+from loop.models import ExecutorResult, CheckResult, VerifierResult, VerifierCheckOutcome
 from librarian.models import Principle, Citation, Edge
 from librarian.store import Index
 
@@ -79,3 +79,36 @@ def make_fixture_index(n: int = 2) -> Index:
     ]
     embeddings = np.zeros((n, 4))
     return Index(principles=principles, embeddings=embeddings, edges=[])
+
+
+class FakeVerifierInvoker:
+    """Queue VerifierResults with .queue(result); falls back to a generic pass result."""
+
+    def __init__(self):
+        self._results: list[VerifierResult] = []
+
+    def queue(self, result: VerifierResult) -> None:
+        self._results.append(result)
+
+    def invoke(self, prompt: str, timeout: float | None = None) -> VerifierResult:
+        if self._results:
+            return self._results.pop(0)
+        return VerifierResult(
+            node_id="unknown",
+            verdict="pass",
+            confidence=1.0,
+            check_outcomes=[],
+            integrity_verdict="clean",
+            summary="fake pass",
+        )
+
+
+def make_pass_verifier_result(node_id: str) -> VerifierResult:
+    return VerifierResult(
+        node_id=node_id,
+        verdict="pass",
+        confidence=1.0,
+        check_outcomes=[],
+        integrity_verdict="clean",
+        summary="all checks passed",
+    )
