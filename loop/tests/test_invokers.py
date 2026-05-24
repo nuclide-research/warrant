@@ -27,6 +27,11 @@ class TestClaudeCodeLLM:
             with pytest.raises(RuntimeError):
                 ClaudeCodeLLM()("any prompt")
 
+    def test_llm_raises_on_timeout(self):
+        with patch("subprocess.run", side_effect=subprocess.TimeoutExpired(cmd="claude", timeout=120.0)):
+            with pytest.raises(RuntimeError):
+                ClaudeCodeLLM()("any prompt")
+
 
 class TestClaudeCodeInvoker:
     def test_executor_invoker_parses_json(self):

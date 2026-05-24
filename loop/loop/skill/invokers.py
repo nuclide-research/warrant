@@ -21,15 +21,22 @@ def _extract_json(text: str) -> str:
     return text
 
 
+_LLM_TIMEOUT = 120.0
+
+
 class ClaudeCodeLLM:
     """Callable LLM that invokes `claude -p <prompt>` and returns stripped stdout."""
 
     def __call__(self, prompt: str) -> str:
-        result = subprocess.run(
-            ["claude", "-p", prompt],
-            capture_output=True,
-            text=True,
-        )
+        try:
+            result = subprocess.run(
+                ["claude", "-p", prompt],
+                capture_output=True,
+                text=True,
+                timeout=_LLM_TIMEOUT,
+            )
+        except subprocess.TimeoutExpired:
+            raise RuntimeError(f"claude timed out after {_LLM_TIMEOUT}s")
         if result.returncode != 0:
             raise RuntimeError(
                 f"claude exited {result.returncode}: {result.stderr.strip()}"
