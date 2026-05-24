@@ -28,7 +28,7 @@ class Config:
     verify_iteration_cap: int = 3
 
 
-def load_config(config_path: Path) -> Config:
+def load_config(config_path: str | Path) -> Config:
     data = json.loads(Path(config_path).read_text(encoding="utf-8"))
     known = {f.name for f in dataclasses.fields(Config)}
     filtered = {k: v for k, v in data.items() if k in known}

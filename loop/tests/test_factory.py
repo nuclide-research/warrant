@@ -60,6 +60,12 @@ def test_build_runner_wires_components(tmp_path):
         index_path=str(tmp_path / "index"),
         out_dir=str(tmp_path / "runs"),
         base_repo=str(tmp_path / "repo"),
+        global_iteration_cap=7,
+        per_node_attempt_cap=2,
+        watchdog_timeout=60.0,
+        max_parallel=2,
+        max_principles=8,
+        verify_iteration_cap=2,
     )
     fake_index = MagicMock()
     with patch("loop.skill.factory.load_index", return_value=fake_index) as mock_idx, \
@@ -71,3 +77,11 @@ def test_build_runner_wires_components(tmp_path):
     mock_emb.assert_called_once_with(cfg.model_name)
     mock_rnk.assert_called_once_with(cfg.reranker_name)
     assert isinstance(runner, WarrantRunner)
+    assert runner._cfg["global_iteration_cap"] == 7
+    assert runner._cfg["per_node_attempt_cap"] == 2
+    assert runner._cfg["watchdog_timeout"] == 60.0
+    assert runner._cfg["max_parallel"] == 2
+    assert runner._max_principles == 8
+    assert runner._verify_iteration_cap == 2
+    assert runner._base_repo == Path(cfg.base_repo)
+    assert runner._out_dir == Path(cfg.out_dir)
