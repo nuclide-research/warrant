@@ -15,18 +15,16 @@ First, verify that `.warrant/config.json` exists in the current directory. If it
 test -f .warrant/config.json || { echo "No .warrant/config.json found. Copy .warrant/config.example.json, fill in index_path and base_repo, then re-run."; exit 1; }
 ```
 
-To start a new run:
+Run the appropriate subcommand based on the direction:
 
 ```bash
-python -m loop.skill run --direction "$ARGUMENTS"
+if [ "$ARGUMENTS" = "resume" ]; then
+  python -m loop.skill resume
+else
+  python -m loop.skill run --direction "$ARGUMENTS"
+fi
 ```
 
 Print the full stdout output to the user (citation report + branch/worktree path).
-
-To resume the latest interrupted run, the user invokes `/warrant resume`. In that case, run:
-
-```bash
-python -m loop.skill resume
-```
 
 All logic lives in the Python package. This skill is intentionally thin.
