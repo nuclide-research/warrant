@@ -75,13 +75,25 @@ def test_execute_saves_run_state(tmp_path):
 def test_execute_respects_global_iteration_cap(tmp_path):
     plan = _make_plan_with_node("n1")
     rs = _make_run_state(plan)
-    invoker = FakeInvoker()
+    # FakeInvoker with no queued results returns "done" by default — use a failing invoker
+    from loop.models import CheckResult
+
+    class AlwaysFailInvoker:
+        def invoke(self, prompt, timeout=None):
+            return ExecutorResult(
+                node_id="n1", status="failed",
+                checks_run=[], principles_honored=[], principles_violated=[],
+                amendments=[], summary="always fails",
+            )
+
     final_rs = execute(
-        plan, rs, _make_principles(), invoker, tmp_path,
+        plan, rs, _make_principles(), AlwaysFailInvoker(), tmp_path,
         global_iteration_cap=2,
         per_node_attempt_cap=10,
     )
-    assert final_rs.iteration >= 2 or final_rs.phase == "done"
+    # Cap hit with node still not done — should be exhausted, not done
+    assert final_rs.phase in ("exhausted", "done")
+    assert final_rs.iteration >= 2
 
 
 def test_execute_stuck_detection_amends_node(tmp_path):

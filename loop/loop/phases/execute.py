@@ -145,6 +145,9 @@ def execute(
         run_state.iteration += 1
         runstore_mod.save_run(run_state, out_dir)
 
-    run_state.phase = "done"
+    if _all_done(run_state):
+        run_state.phase = "done"
+    else:
+        run_state.phase = "exhausted"
     runstore_mod.save_run(run_state, out_dir)
     return run_state

@@ -104,7 +104,7 @@ class WarrantRunner:
         from librarian.models import principle_from_dict
         from librarian.query import Result
 
-        plan = planstore.load_latest(self._out_dir)
+        plan = planstore.load_version(self._out_dir, run_state.plan_version)
         principles_file = (
             Path(run_state.worktree_path) / ".warrant" / "principles.json"
         )
@@ -118,6 +118,8 @@ class WarrantRunner:
         for ns in run_state.node_statuses.values():
             if ns.status == "in_flight":
                 ns.status = "pending"
+
+        runstore_mod.save_run(run_state, self._out_dir)
 
         return execute(
             plan, run_state, principles, self._invoker, self._out_dir,
