@@ -1,8 +1,8 @@
 ---
 name: warrant
 description: >
-  Autonomous book-grounded coding agent. Runs Orient -> Retrieve -> Plan ->
-  Execute -> Verify given one direction, returns a finished worktree and
+  Autonomous book-grounded coding agent. Runs Orient → Retrieve → Plan →
+  Execute → Verify given one direction, returns a finished branch and
   citation report. Usage: /warrant <direction>
 allowed-tools: Bash
 ---
@@ -23,7 +23,7 @@ To start a new run:
 python -m loop.skill run --direction "$ARGUMENTS"
 ```
 
-Print the full stdout output to the user (citation report + worktree path).
+Print the full stdout output to the user (citation report + branch/worktree path).
 
 To resume the latest interrupted run, the user invokes `/warrant resume`. In that case, run:
 
