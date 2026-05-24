@@ -108,3 +108,28 @@ def test_deps_context_included():
     rs = _make_run_state()
     prompt = materializer.materialize(node, results, rs, {"n0": dep})
     assert "Choose dep approach" in prompt
+
+
+def test_checks_included():
+    index = make_fixture_index()
+    results = _make_results(index)
+    check = ApplicableCheck(check="Verify no circular deps", provenance="from_grounds")
+    node = _make_node(grounds=("test-book:ch1:s1",), applicable_checks=(check,))
+    rs = _make_run_state()
+    prompt = materializer.materialize(node, results, rs, {})
+    assert "Verify no circular deps" in prompt
+    assert "from_grounds" in prompt
+
+
+def test_ungrounded_node_flagged():
+    index = make_fixture_index()
+    results = _make_results(index)
+    node = PlanNode(
+        id="n1", level="architectural",
+        decision="X", approach="Y",
+        grounds=(), grounds_state="ungrounded", grounds_note="Library silent on this topic.",
+    )
+    rs = _make_run_state()
+    prompt = materializer.materialize(node, results, rs, {})
+    assert "ungrounded" in prompt
+    assert "Library silent on this topic." in prompt

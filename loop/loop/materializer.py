@@ -67,12 +67,18 @@ def materialize(
         f"## Approach\n{node.approach}",
     ]
 
+    if node.grounds_state != "clean":
+        status_lines = [f"{node.grounds_state}: {node.grounds_note}"]
+        if node.grounds_state == "conflicted" and node.conflict_resolution:
+            status_lines.append(f"Conflict resolution: {node.conflict_resolution}")
+        sections.append("## Grounding status\n" + "\n".join(status_lines))
+
     if grounding_lines:
         sections.append("## Grounding\n" + "\n\n".join(grounding_lines))
 
     if missing_ids:
         lines = "\n".join(f"- {i}" for i in missing_ids)
-        sections.append(f"# Missing principles (not in retrieved set)\n{lines}")
+        sections.append(f"## Missing principles (not in retrieved set)\n{lines}")
 
     if checks_lines:
         sections.append("## Checks you must run\n" + "\n".join(checks_lines))
