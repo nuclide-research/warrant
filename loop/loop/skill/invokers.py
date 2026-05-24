@@ -110,6 +110,8 @@ class ClaudeCodeVerifierInvoker:
                 summary=d.get("summary", ""),
             )
         except Exception as exc:
+            # integrity_verdict="clean" prevents the verify loop from re-queuing
+            # the node on invoker failure — same convention as phases/verify.py
             return VerifierResult(
                 node_id="unknown",
                 verdict="fail",

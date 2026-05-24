@@ -72,6 +72,11 @@ class TestClaudeCodeInvoker:
             result = ClaudeCodeInvoker().invoke("prompt")
         assert result.status == "failed"
 
+    def test_executor_invoker_returns_failed_on_nonzero_exit(self):
+        with patch("subprocess.run", return_value=_make_proc(returncode=1, stderr="auth error")):
+            result = ClaudeCodeInvoker().invoke("prompt")
+        assert result.status == "failed"
+
 
 class TestClaudeCodeVerifierInvoker:
     def test_verifier_invoker_parses_json(self):
@@ -92,5 +97,10 @@ class TestClaudeCodeVerifierInvoker:
 
     def test_verifier_invoker_returns_clean_on_bad_json(self):
         with patch("subprocess.run", return_value=_make_proc("not json at all")):
+            result = ClaudeCodeVerifierInvoker().invoke("prompt")
+        assert result.integrity_verdict == "clean"
+
+    def test_verifier_invoker_returns_clean_on_nonzero_exit(self):
+        with patch("subprocess.run", return_value=_make_proc(returncode=1, stderr="auth error")):
             result = ClaudeCodeVerifierInvoker().invoke("prompt")
         assert result.integrity_verdict == "clean"
