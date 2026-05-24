@@ -1,6 +1,6 @@
 # Warrant — Session State
 
-Last updated: 2026-05-22
+Last updated: 2026-05-24
 
 **Project.** Warrant is a book-grounded autonomous coding agent: a Claude Code
 skill that runs a fully autonomous coding agent grounded in O'Reilly engineering
@@ -11,7 +11,7 @@ no-sandbox variant Nick floated, **C** a shareable kit). Design spec:
 
 Artifact A has two parts: the **Librarian** (the retrieval engine, done) and the
 **Agent** (the autonomous loop that uses it). The Agent is being built as four
-sequential plans; plan 1 of 4 is done.
+sequential plans; plans 1–3 of 4 are done.
 
 ## Done — the Librarian (Artifact A's retrieval engine)
 
@@ -77,20 +77,47 @@ The `loop/` package drives the Orient → Retrieve → Plan → Execute phases.
 - Merged to `main`. All tests pass. HEAD `2ec060180b94e4785a3942bb1b14a69cae2819be`.
 - Modules: `models`, `runstore`, `worktree`, `materializer`,
   `phases/{orient,retrieve,plan,execute}`, `runner`.
-- `WarrantRunner.run(direction)` drives the full loop; `.resume(run_state)`
-  re-enters Execute from a checkpoint.
+- `WarrantRunner.run(direction)` drove Orient → Retrieve → Plan → Execute;
+  `.resume(run_state)` re-entered Execute from a checkpoint.
 - `Invoker` protocol: plan 4 skill wrapper provides `ClaudeCodeInvoker`;
   tests use `FakeInvoker`.
 
+## Done — the Agent, plan 3 of 4: Verify + citation report
+
+Extends `loop/` with a Verify phase and CitationReport projection. `WarrantRunner.run()`
+now drives Orient → Retrieve → Plan → Execute → Verify and returns
+`tuple[RunState, CitationReport]`.
+
+- Built via `superpowers:subagent-driven-development` from the 8-task plan
+  `docs/superpowers/plans/2026-05-24-warrant-verify-citationreport.md`. Design spec:
+  `docs/superpowers/specs/2026-05-24-warrant-verify-citationreport-design.md`.
+- Merged to `main` (branch `worktree-agent-verify`, fast-forward, then deleted).
+  95 tests pass. HEAD `77db7a1`.
+- New modules: `verifier_materializer.py`, `citationreport.py`, `phases/verify.py`.
+- Updated: `models.py` (added `VerifierCheckOutcome`, `VerifierResult`, `CitationReport`,
+  `VerifierInvoker` Protocol, `pre_execution_sha` on `NodeStatus`); `phases/execute.py`
+  (records `pre_execution_sha` via `_get_head_sha` before each dispatch batch);
+  `runner.py` (added `_execute_verify_loop`, `verifier_invoker`, `verify_iteration_cap`).
+- `VerifierInvoker` protocol: `invoke(prompt, timeout) -> VerifierResult`. Tests use
+  `FakeVerifierInvoker`. Live skill wrapper provides the real invoker in plan 4.
+- `integrity_failure` verdict routes node back to pending and re-executes; at
+  `per_node_attempt_cap` the node is amended + marked failed. `audit_catch` and
+  `clean` leave the node done. Verifier exceptions produce a synthetic clean result
+  (no routing loop).
+- `CitationReport` counts grounded/conflicted/ungrounded nodes, tier-1/2/3 checks,
+  amendments, and sets `suspiciously_clean` flag when no stress signals appear on
+  plans of >= 5 nodes. `render_citation_report()` produces formatted text output.
+- Two bugs caught and fixed by reviews: `_get_diff` untracked-file quoting (use
+  `git ls-files -z` not `git status --short`); exhausted-phase spin in
+  `_execute_verify_loop` (break when `phase == "exhausted"`).
+
 ## Open / next
 
-1. **The Agent, plan 3 of 4: Verify + citation report.**
-   The Verifier subagent, Tier-1/2/3 check execution, failure routing
-   (from_grounds → Execute, from_topic → report), the citation report
-   projection. Same path: brainstorm → spec → plan → subagent build.
-2. **The Warrant skill wrapper (plan 4).** `SKILL.md` + `ClaudeCodeInvoker`.
-3. Artifacts B and C, after A.
-4. Optional: live re-verify of Librarian edge extraction on a real book.
+1. **The Warrant skill wrapper (plan 4).** `SKILL.md` + `ClaudeCodeInvoker` +
+   `ClaudeCodeVerifierInvoker`. Wires the runner into a Claude Code skill invoked
+   with a single direction string.
+2. Artifacts B and C, after A.
+3. Optional: live re-verify of Librarian edge extraction on a real book.
 
 ## Notes
 
