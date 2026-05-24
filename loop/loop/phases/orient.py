@@ -41,6 +41,8 @@ def orient(
     reading_list = "\n".join(
         f"- {book}: {chapter}" for _, book, chapter in citations[:40]
     )
+    if not reading_list:
+        reading_list = "No specific reading list available."
     persona_prompt = (
         f"You are a coding agent. Based on this reading list, write one paragraph "
         f"describing your specialist identity and expertise:\n\n{reading_list}"
@@ -55,8 +57,10 @@ def orient(
     )
     queries_raw = llm(query_prompt).strip()
     retrieval_queries = [q.strip() for q in queries_raw.splitlines() if q.strip()][:5]
+    if not retrieval_queries:
+        retrieval_queries = [direction]
 
-    branch = f"warrant/{run_id[:8]}"
+    branch = f"warrant/{run_id}"
     wt_path = worktree_mgr.create(base_repo, branch)
 
     return OrientResult(
