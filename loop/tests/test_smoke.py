@@ -29,7 +29,7 @@ def test_runner_construction_and_run(tmp_path):
     from loop.runner import WarrantRunner
     from loop.worktree import WorktreeManager
     from loop.models import ExecutorResult
-    from tests.fakes import FakeLLM, FakeInvoker, FakeReranker, FakeEmbedder, make_fixture_index
+    from tests.fakes import FakeLLM, FakeInvoker, FakeVerifierInvoker, FakeReranker, FakeEmbedder, make_fixture_index
 
     repo = tmp_path / "repo"
     repo.mkdir()
@@ -53,12 +53,13 @@ def test_runner_construction_and_run(tmp_path):
         reranker=FakeReranker(),
         llm=llm,
         invoker=invoker,
+        verifier_invoker=FakeVerifierInvoker(),
         worktree_mgr=WorktreeManager(),
         base_repo=repo,
         out_dir=tmp_path / "out",
         global_iteration_cap=3,
     )
-    final_rs = runner.run("build a thing")
+    final_rs, report = runner.run("build a thing")
     try:
         WorktreeManager().remove(Path(final_rs.worktree_path))
     except Exception:
