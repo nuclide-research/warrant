@@ -1,0 +1,11 @@
+{
+  "index_path": "/path/to/built/librarian/index",
+  "base_repo": "/path/to/your/project",
+  "out_dir": ".warrant/runs",
+  "global_iteration_cap": 10,
+  "per_node_attempt_cap": 3,
+  "watchdog_timeout": 300.0,
+  "max_parallel": 3,
+  "max_principles": 15,
+  "verify_iteration_cap": 3
+}
