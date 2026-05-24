@@ -72,7 +72,7 @@ class WorktreeManager:
             cwd=worktree_path, capture_output=True, text=True,
         )
         if result.returncode != 0:
-            raise WorktreeError("not a git repository")
-        common = Path(result.stdout.strip())
+            raise WorktreeError(f"not a git repository: {result.stderr.strip()}")
+        common = (worktree_path / Path(result.stdout.strip())).resolve()
         # common dir is .git inside main repo
         return common.parent
