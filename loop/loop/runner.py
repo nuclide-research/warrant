@@ -73,6 +73,8 @@ class WarrantRunner:
                 current_plan, run_state, principles,
                 self._invoker, self._out_dir, **self._cfg,
             )
+            if run_state.phase == "exhausted":
+                break
             run_state, new_vr = verify(
                 current_plan, run_state, principles,
                 self._verifier_invoker, self._out_dir,
