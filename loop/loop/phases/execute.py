@@ -1,4 +1,5 @@
 from __future__ import annotations
+import subprocess as _subprocess
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
@@ -10,6 +11,18 @@ from ..materializer import materialize
 from librarian.query import Result
 
 _INTEGRITY_PROVENANCE = "from_grounds"
+
+
+def _get_head_sha(worktree_path: str) -> str:
+    try:
+        result = _subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=worktree_path,
+            capture_output=True, text=True, check=False,
+        )
+        return result.stdout.strip() if result.returncode == 0 else ""
+    except Exception:
+        return ""
 
 
 def _ready_nodes(plan: Plan, run_state: RunState) -> list[PlanNode]:
@@ -74,8 +87,10 @@ def execute(
             f"BUG: dispatch set is not independent: {ready_ids}"
         )
 
+        head_sha = _get_head_sha(run_state.worktree_path)
         for node in ready:
             run_state.node_statuses[node.id].status = "in_flight"
+            run_state.node_statuses[node.id].pre_execution_sha = head_sha
 
         results: dict[str, ExecutorResult] = {}
 

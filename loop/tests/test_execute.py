@@ -146,3 +146,47 @@ def test_execute_depends_on_respected(tmp_path):
 
     execute(plan, rs, _make_principles(), OrderTrackingInvoker(), tmp_path)
     assert call_order.index("n1") < call_order.index("n2")
+
+
+def test_pre_execution_sha_recorded(tmp_path):
+    import subprocess as sp
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    sp.run(["git", "init"], cwd=repo, check=True, capture_output=True)
+    sp.run(["git", "config", "user.email", "t@t.com"], cwd=repo, check=True, capture_output=True)
+    sp.run(["git", "config", "user.name", "T"], cwd=repo, check=True, capture_output=True)
+    (repo / "f.txt").write_text("x")
+    sp.run(["git", "add", "."], cwd=repo, check=True, capture_output=True)
+    sp.run(["git", "commit", "-m", "init"], cwd=repo, check=True, capture_output=True)
+
+    from agent import planops
+    from agent.plan import PlanNode
+    from loop.models import RunState, NodeStatus, ExecutorResult
+    from loop.phases.execute import execute
+    from tests.fakes import FakeInvoker
+
+    node = PlanNode(
+        id="n1", level="architectural",
+        decision="Do X", approach="Use Y",
+        grounds=(), grounds_state="ungrounded", grounds_note="silent",
+    )
+    plan = planops.new_plan("task")
+    plan = planops.add_node(plan, node)
+
+    run_state = RunState(
+        run_id="r1", plan_id=plan.plan_id, plan_version=plan.version,
+        worktree_path=str(repo), phase="execute",
+        node_statuses={"n1": NodeStatus(node_id="n1", status="pending")},
+        anchored_direction="#DIRECTION: test",
+        anchored_honesty_constraint="be honest",
+    )
+    invoker = FakeInvoker()
+    invoker.queue(ExecutorResult(
+        node_id="n1", status="done",
+        checks_run=[], principles_honored=[], principles_violated=[],
+        amendments=[], summary="done",
+    ))
+    final_rs = execute(plan, run_state, [], invoker, tmp_path)
+    sha = final_rs.node_statuses["n1"].pre_execution_sha
+    assert sha != ""
+    assert len(sha) == 40  # full git sha
