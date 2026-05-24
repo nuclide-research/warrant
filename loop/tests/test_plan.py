@@ -99,3 +99,16 @@ def test_expand_subtree_adds_children_to_parent(tmp_path):
     expanded = expand_subtree(plan, "n1", results, llm, tmp_path)
     parent = planops.find_node(expanded, "n1")
     assert "n1_1" in parent.children
+
+
+def test_expand_subtree_nonexistent_node_raises(tmp_path):
+    import pytest
+    index = make_fixture_index(2)
+    results = _make_results(index)
+    llm = FakeLLM()
+    llm.queue(json.dumps([_node_json("n1", ["test-book:ch1:s1"])]))
+    plan = build_initial("build", results, llm)
+    planstore.save_plan(plan, tmp_path)
+    llm.queue("[]")
+    with pytest.raises(ValueError, match="n99"):
+        expand_subtree(plan, "n99", results, llm, tmp_path)

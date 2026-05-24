@@ -1,4 +1,5 @@
 from __future__ import annotations
+import dataclasses
 import json
 from pathlib import Path
 from typing import Callable
@@ -108,22 +109,33 @@ def expand_subtree(
 
     new_plan = planops.next_version(plan)
     child_ids: list[str] = []
+    skipped_ids: list[str] = []
     for d in raw_nodes:
         level = d.get("level", "structural")
         if level not in ("structural", "implementation"):
             level = "structural"
         node = _make_node(d, valid_ids, level)
         if node is not None:
+            # filter depends_on to only reference existing nodes
+            existing_ids = {n.id for n in new_plan.nodes} | set(child_ids)
+            if not all(dep in existing_ids for dep in node.depends_on):
+                node = dataclasses.replace(
+                    node,
+                    depends_on=tuple(dep for dep in node.depends_on if dep in existing_ids)
+                )
             try:
                 new_plan = planops.add_node(new_plan, node)
                 child_ids.append(node.id)
             except ValueError:
-                continue
+                skipped_ids.append(node.id)
 
     if child_ids:
+        reason = "subtree expanded"
+        if skipped_ids:
+            reason = f"subtree expanded (skipped duplicate ids: {skipped_ids})"
         new_plan = planops.amend_node(
             new_plan, node_id,
-            "subtree expanded",
+            reason,
             children=tuple(child_ids),
         )
 
