@@ -27,6 +27,7 @@ def _node_status_from_dict(d: dict) -> NodeStatus:
         status=d["status"],
         attempts=d["attempts"],
         last_result=_executor_result_from_dict(d.get("last_result")),
+        pre_execution_sha=d.get("pre_execution_sha", ""),
     )
 
 
