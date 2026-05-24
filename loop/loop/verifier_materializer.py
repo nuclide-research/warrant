@@ -1,5 +1,6 @@
 from __future__ import annotations
 import json
+import os
 import subprocess
 
 from agent.plan import PlanNode
@@ -44,29 +45,15 @@ def _get_diff(worktree_path: str, pre_execution_sha: str) -> str:
         )
         diff = diff_result.stdout if diff_result.returncode == 0 else ""
 
-        # Staged changes not yet committed
-        cached_cmd = (
-            ["git", "diff", "--cached", pre_execution_sha]
-            if pre_execution_sha
-            else ["git", "diff", "--cached"]
-        )
-        cached_result = subprocess.run(
-            cached_cmd, cwd=worktree_path, capture_output=True, text=True, check=False
-        )
-        cached = cached_result.stdout if cached_result.returncode == 0 else ""
-
         # Untracked files — include their contents as pseudo-diffs
         status_result = subprocess.run(
-            ["git", "status", "--short"],
-            cwd=worktree_path, capture_output=True, text=True, check=False,
+            ["git", "ls-files", "--others", "--exclude-standard", "-z"],
+            cwd=worktree_path, capture_output=True, check=False,
         )
         untracked_filenames = [
-            line[3:].strip()
-            for line in (status_result.stdout or "").splitlines()
-            if line.startswith("??")
+            p for p in status_result.stdout.decode("utf-8", errors="replace").split("\0") if p
         ]
         untracked_parts: list[str] = []
-        import os
         for fname in untracked_filenames:
             fpath = os.path.join(worktree_path, fname)
             try:
@@ -84,7 +71,7 @@ def _get_diff(worktree_path: str, pre_execution_sha: str) -> str:
             else ""
         )
 
-        diff = "\n".join(filter(None, [diff, cached, untracked]))
+        diff = "\n".join(filter(None, [diff, untracked]))
     except Exception:
         diff = ""
     if not diff.strip():
