@@ -65,6 +65,7 @@ def materialize(
         run_state.anchored_honesty_constraint,
         f"## Your task\n{node.decision}",
         f"## Approach\n{node.approach}",
+        f"## Working directory\n{run_state.worktree_path}",
     ]
 
     if node.grounds_state != "clean":

@@ -125,6 +125,7 @@ def materialize_verifier(
             "the Executor's reasoning. Grade the Executor's work strictly against the "
             "cited principles. Do not accept the Executor's self-assessment at face value."
         ),
+        f"## Working directory\n{worktree_path}",
     ]
 
     node_lines = [
