@@ -170,12 +170,42 @@ skill context.
 - `.warrant/api-config.example.json` documents all 12 fields. `anthropic_api_key`
   is intentionally absent; users set `ANTHROPIC_API_KEY` in the environment.
 
+## Done — Artifact C: shareable starter kit
+
+Makes the repo self-contained for new users: `git clone` → `make install-api` →
+`warrant init` → `warrant run --direction "..."` in under 10 minutes, no private
+book corpus needed.
+
+- Built via `superpowers:subagent-driven-development` from the 5-task plan
+  `docs/superpowers/plans/2026-05-24-warrant-artifact-c.md`. Design spec:
+  `docs/superpowers/specs/2026-05-24-warrant-artifact-c-design.md`.
+- 249 tests pass (145 loop / 69 agent / 35 librarian). HEAD at latest main commit.
+- New additions:
+  - `README.md`: project face — quick start, config reference, structure.
+  - `Makefile`: `install`, `install-api`, `test`, `demo` targets.
+  - `warrant init` subcommand in `loop/loop/api/__main__.py`: interactive
+    scaffolding of `.warrant/api-config.json` (3 prompts, defaults to
+    `sample-library/index`). Default config path fixed from `.warrant/config.json`
+    to `.warrant/api-config.json`.
+  - `sample-library/principles.json`: 15 hand-crafted engineering principles
+    (design/robustness/testing/architecture/ops). Edge kinds encoded per-entry
+    (refines / contradicts / shares_topic — no LLM blanket assignment).
+  - `sample-library/build_index.py`: one-time build script calling librarian
+    internals directly (no LLM, no corpus parsing). Builds from JSON → embedded
+    index. Run once during dev; output committed to git.
+  - `sample-library/index/`: pre-built librarian index (15 principles, 384-dim
+    embeddings, 18 edges). Committed so users get a working index immediately.
+  - `sample-library/demo-config.json`: points at the bundled index with reduced
+    caps for a fast demo run.
+- New test file: `loop/tests/test_api_init.py` (8 tests).
+
 ## Open / next
 
-1. Artifact C (shareable kit), now that Artifacts A and B are complete.
-2. Optional: live re-verify of Librarian edge extraction on a real book.
-3. Optional: end-to-end live test of the full `/warrant <direction>` skill
+1. Optional: live re-verify of Librarian edge extraction on a real book.
+2. Optional: end-to-end live test of the full `/warrant <direction>` skill
    against a real codebase with a built Librarian index.
+3. Optional: push to GitHub remote (`https://github.com/Nicholas-Kloster/warrant`)
+   so Artifact C is publicly visible.
 
 ## Notes
 
