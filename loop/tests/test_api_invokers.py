@@ -97,3 +97,95 @@ class TestAnthropicLLM:
         llm = AnthropicLLM(mock_client, "claude-sonnet-4-6")
         with pytest.raises(RuntimeError):
             llm("some prompt")
+
+
+from loop.api.invokers import AnthropicInvoker, TOOL_DEFS
+from loop.models import ExecutorResult
+
+
+def _make_tool_use_block(name: str, input_dict: dict, tool_id: str = "tid1"):
+    b = MagicMock()
+    b.type = "tool_use"
+    b.name = name
+    b.input = input_dict
+    b.id = tool_id
+    return b
+
+
+_EXECUTOR_RESULT_JSON = json.dumps({
+    "node_id": "n1",
+    "status": "done",
+    "checks_run": [],
+    "principles_honored": ["p1"],
+    "principles_violated": [],
+    "amendments": [],
+    "summary": "completed",
+})
+
+_PROMPT_WITH_WD = "## Working directory\n/tmp/wt\n\n## Your task\nAdd caching"
+
+
+class TestAnthropicInvoker:
+    def test_end_turn_produces_executor_result(self):
+        mock_client = MagicMock()
+        mock_client.messages.create.return_value = _make_response(
+            "end_turn", [_make_text_block(_EXECUTOR_RESULT_JSON)]
+        )
+        invoker = AnthropicInvoker(mock_client, "claude-sonnet-4-6")
+        result = invoker.invoke(_PROMPT_WITH_WD)
+        assert isinstance(result, ExecutorResult)
+        assert result.node_id == "n1"
+        assert result.status == "done"
+        assert result.principles_honored == ["p1"]
+
+    def test_tool_loop_dispatches_to_sandbox(self, tmp_path):
+        prompt = f"## Working directory\n{tmp_path}\n\n## Your task\nWrite a file"
+        mock_client = MagicMock()
+        tool_response = _make_response(
+            "tool_use",
+            [_make_tool_use_block("bash", {"command": "echo hi"}, "tid1")],
+        )
+        end_response = _make_response(
+            "end_turn", [_make_text_block(_EXECUTOR_RESULT_JSON)]
+        )
+        mock_client.messages.create.side_effect = [tool_response, end_response]
+
+        invoker = AnthropicInvoker(mock_client, "claude-sonnet-4-6")
+        result = invoker.invoke(prompt)
+
+        assert mock_client.messages.create.call_count == 2
+        assert isinstance(result, ExecutorResult)
+        assert result.status == "done"
+
+    def test_max_rounds_returns_failed(self):
+        mock_client = MagicMock()
+        # Always return tool_use — never end_turn
+        mock_client.messages.create.return_value = _make_response(
+            "tool_use",
+            [_make_tool_use_block("bash", {"command": "echo hi"})],
+        )
+        invoker = AnthropicInvoker(mock_client, "claude-sonnet-4-6", max_tool_rounds=3)
+        result = invoker.invoke(_PROMPT_WITH_WD)
+
+        assert result.status == "failed"
+        assert "max tool rounds" in result.summary
+        assert mock_client.messages.create.call_count == 3
+
+    def test_bad_json_returns_failed(self):
+        mock_client = MagicMock()
+        mock_client.messages.create.return_value = _make_response(
+            "end_turn", [_make_text_block("this is just prose, not JSON")]
+        )
+        invoker = AnthropicInvoker(mock_client, "claude-sonnet-4-6")
+        result = invoker.invoke(_PROMPT_WITH_WD)
+        assert result.status == "failed"
+
+    def test_missing_working_directory_uses_fallback(self):
+        mock_client = MagicMock()
+        mock_client.messages.create.return_value = _make_response(
+            "end_turn", [_make_text_block(_EXECUTOR_RESULT_JSON)]
+        )
+        invoker = AnthropicInvoker(mock_client, "claude-sonnet-4-6")
+        # No ## Working directory section — should not crash
+        result = invoker.invoke("## Your task\nDo something")
+        assert isinstance(result, ExecutorResult)

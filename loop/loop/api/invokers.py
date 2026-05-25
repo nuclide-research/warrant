@@ -128,3 +128,90 @@ class AnthropicLLM:
             return text_block.text.strip()
         except Exception as exc:
             raise RuntimeError(f"anthropic API error: {exc}") from exc
+
+
+class AnthropicInvoker:
+    """Executor Invoker: multi-turn Anthropic API conversation with tool use."""
+
+    def __init__(
+        self,
+        client: anthropic.Anthropic,
+        model: str,
+        max_tool_rounds: int = 50,
+    ) -> None:
+        self._client = client
+        self._model = model
+        self._max_tool_rounds = max_tool_rounds
+
+    def invoke(self, prompt: str, timeout: float | None = None) -> ExecutorResult:
+        m = re.search(r"^## Working directory\n(.+)$", prompt, re.MULTILINE)
+        worktree_path = m.group(1).strip() if m else "."
+        sandbox = WorktreeSandbox(worktree_path)
+        messages: list[dict] = [{"role": "user", "content": prompt}]
+
+        try:
+            for _ in range(self._max_tool_rounds):
+                response = self._client.messages.create(
+                    model=self._model,
+                    max_tokens=8192,
+                    system=_EXECUTOR_SYSTEM,
+                    tools=TOOL_DEFS,
+                    messages=messages,
+                )
+
+                if response.stop_reason == "end_turn":
+                    text = next(
+                        (
+                            b.text
+                            for b in response.content
+                            if getattr(b, "type", None) == "text"
+                        ),
+                        "",
+                    )
+                    raw = _extract_json(text)
+                    d = json.loads(raw)
+                    return ExecutorResult(
+                        node_id=d["node_id"],
+                        status=d["status"],
+                        checks_run=[CheckResult(**c) for c in d.get("checks_run", [])],
+                        principles_honored=d.get("principles_honored", []),
+                        principles_violated=d.get("principles_violated", []),
+                        amendments=[
+                            NodeAmendment(**a) for a in d.get("amendments", [])
+                        ],
+                        summary=d.get("summary", ""),
+                    )
+
+                tool_results: list[dict] = []
+                for block in response.content:
+                    if getattr(block, "type", None) == "tool_use":
+                        result_str = _dispatch_tool(block.name, block.input, sandbox)
+                        tool_results.append(
+                            {
+                                "type": "tool_result",
+                                "tool_use_id": block.id,
+                                "content": result_str,
+                            }
+                        )
+                messages.append({"role": "assistant", "content": response.content})
+                messages.append({"role": "user", "content": tool_results})
+
+            return ExecutorResult(
+                node_id="unknown",
+                status="failed",
+                checks_run=[],
+                principles_honored=[],
+                principles_violated=[],
+                amendments=[],
+                summary="max tool rounds exceeded",
+            )
+        except Exception as exc:
+            return ExecutorResult(
+                node_id="unknown",
+                status="failed",
+                checks_run=[],
+                principles_honored=[],
+                principles_violated=[],
+                amendments=[],
+                summary=str(exc),
+            )
