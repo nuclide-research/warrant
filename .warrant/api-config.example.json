@@ -1,0 +1,14 @@
+{
+  "index_path": "/path/to/built/librarian/index",
+  "base_repo": "/path/to/your/project",
+  "out_dir": ".warrant/runs",
+  "claude_model": "claude-sonnet-4-6",
+  "claude_model_verifier": "claude-sonnet-4-6",
+  "max_tool_rounds": 50,
+  "global_iteration_cap": 10,
+  "per_node_attempt_cap": 3,
+  "watchdog_timeout": 300.0,
+  "max_parallel": 3,
+  "max_principles": 15,
+  "verify_iteration_cap": 3
+}

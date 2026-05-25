@@ -142,10 +142,37 @@ Claude Code skill entry point. Artifact A is now fully complete.
   so the resume path would have started a new run with direction="resume".
   Fixed with a bash conditional before merge.
 
+## Done — Artifact B: standalone CLI
+
+Adds a real-API / no-sandbox variant of the agent that runs `warrant` as a
+standalone binary against a live Anthropic API key, outside the Claude Code
+skill context.
+
+- Built via `superpowers:subagent-driven-development` from the 8-task plan
+  `docs/superpowers/plans/2026-05-24-warrant-artifact-b.md`. On branch
+  `artifact-b`.
+- 240 tests pass (136 loop / 69 agent / 35 librarian).
+- New subpackage `loop/loop/api/` with four modules:
+  - `sandbox.py`: `WorktreeSandbox` — clones the base repo into a temp
+    worktree, exposes `apply_diff` and `run_command`, and tears down cleanly.
+  - `invokers.py`: `AnthropicInvoker` and `AnthropicVerifierInvoker` — call
+    the Anthropic API directly (no subprocess). `_extract_json` strips fences,
+    falls back to brace extraction. Synthetic failed/clean results on parse
+    failure prevent routing loops.
+  - `factory.py`: `ApiConfig` dataclass (12 fields with defaults, no
+    `anthropic_api_key` — that comes from `ANTHROPIC_API_KEY` env), `load_api_config()`,
+    `build_api_runner()`.
+  - `__main__.py`: `run` and `resume` subcommands. Entry point registered as
+    the `warrant` console script.
+- `ExecutionMaterializer` and `VerifierMaterializer` both gained a
+  `## Working directory` section so the agent and verifier always know where
+  to operate.
+- `.warrant/api-config.example.json` documents all 12 fields. `anthropic_api_key`
+  is intentionally absent; users set `ANTHROPIC_API_KEY` in the environment.
+
 ## Open / next
 
-1. Artifacts B (standalone CLI / "wild Bill" no-sandbox variant) and C
-   (shareable kit), now that Artifact A is complete.
+1. Artifact C (shareable kit), now that Artifacts A and B are complete.
 2. Optional: live re-verify of Librarian edge extraction on a real book.
 3. Optional: end-to-end live test of the full `/warrant <direction>` skill
    against a real codebase with a built Librarian index.
