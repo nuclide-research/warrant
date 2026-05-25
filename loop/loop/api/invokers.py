@@ -215,3 +215,88 @@ class AnthropicInvoker:
                 amendments=[],
                 summary=str(exc),
             )
+
+
+class AnthropicVerifierInvoker:
+    """VerifierInvoker: multi-turn Anthropic API conversation with read-only tools."""
+
+    def __init__(
+        self,
+        client: anthropic.Anthropic,
+        model: str,
+        max_tool_rounds: int = 50,
+    ) -> None:
+        self._client = client
+        self._model = model
+        self._max_tool_rounds = max_tool_rounds
+
+    def invoke(self, prompt: str, timeout: float | None = None) -> VerifierResult:
+        m = re.search(r"^## Working directory\n(.+)$", prompt, re.MULTILINE)
+        worktree_path = m.group(1).strip() if m else "."
+        sandbox = WorktreeSandbox(worktree_path)
+        messages: list[dict] = [{"role": "user", "content": prompt}]
+
+        try:
+            for _ in range(self._max_tool_rounds):
+                response = self._client.messages.create(
+                    model=self._model,
+                    max_tokens=8192,
+                    system=_VERIFIER_SYSTEM,
+                    tools=VERIFIER_TOOL_DEFS,
+                    messages=messages,
+                )
+
+                if response.stop_reason == "end_turn":
+                    text = next(
+                        (
+                            b.text
+                            for b in response.content
+                            if getattr(b, "type", None) == "text"
+                        ),
+                        "",
+                    )
+                    raw = _extract_json(text)
+                    d = json.loads(raw)
+                    return VerifierResult(
+                        node_id=d["node_id"],
+                        verdict=d["verdict"],
+                        confidence=d.get("confidence", 1.0),
+                        check_outcomes=[
+                            VerifierCheckOutcome(**c)
+                            for c in d.get("check_outcomes", [])
+                        ],
+                        integrity_verdict=d["integrity_verdict"],
+                        summary=d.get("summary", ""),
+                    )
+
+                tool_results: list[dict] = []
+                for block in response.content:
+                    if getattr(block, "type", None) == "tool_use":
+                        result_str = _dispatch_tool(block.name, block.input, sandbox)
+                        tool_results.append(
+                            {
+                                "type": "tool_result",
+                                "tool_use_id": block.id,
+                                "content": result_str,
+                            }
+                        )
+                messages.append({"role": "assistant", "content": response.content})
+                messages.append({"role": "user", "content": tool_results})
+
+            return VerifierResult(
+                node_id="unknown",
+                verdict="fail",
+                confidence=0.0,
+                check_outcomes=[],
+                integrity_verdict="clean",
+                summary="max tool rounds exceeded",
+            )
+        except Exception as exc:
+            return VerifierResult(
+                node_id="unknown",
+                verdict="fail",
+                confidence=0.0,
+                check_outcomes=[],
+                integrity_verdict="clean",
+                summary=str(exc),
+            )

@@ -100,7 +100,7 @@ class TestAnthropicLLM:
 
 
 from loop.api.invokers import AnthropicInvoker, TOOL_DEFS
-from loop.models import ExecutorResult
+from loop.models import ExecutorResult, VerifierResult
 
 
 def _make_tool_use_block(name: str, input_dict: dict, tool_id: str = "tid1"):
@@ -189,3 +189,58 @@ class TestAnthropicInvoker:
         # No ## Working directory section — should not crash
         result = invoker.invoke("## Your task\nDo something")
         assert isinstance(result, ExecutorResult)
+
+
+from loop.api.invokers import AnthropicVerifierInvoker, VERIFIER_TOOL_DEFS
+
+
+_VERIFIER_RESULT_JSON = json.dumps({
+    "node_id": "n1",
+    "verdict": "pass",
+    "confidence": 0.95,
+    "check_outcomes": [],
+    "integrity_verdict": "clean",
+    "summary": "all checks passed",
+})
+
+
+class TestAnthropicVerifierInvoker:
+    def test_end_turn_produces_verifier_result(self):
+        mock_client = MagicMock()
+        mock_client.messages.create.return_value = _make_response(
+            "end_turn", [_make_text_block(_VERIFIER_RESULT_JSON)]
+        )
+        invoker = AnthropicVerifierInvoker(mock_client, "claude-sonnet-4-6")
+        result = invoker.invoke(_PROMPT_WITH_WD)
+        assert isinstance(result, VerifierResult)
+        assert result.verdict == "pass"
+        assert result.integrity_verdict == "clean"
+
+    def test_bad_json_returns_clean_integrity_verdict(self):
+        mock_client = MagicMock()
+        mock_client.messages.create.return_value = _make_response(
+            "end_turn", [_make_text_block("not json at all")]
+        )
+        invoker = AnthropicVerifierInvoker(mock_client, "claude-sonnet-4-6")
+        result = invoker.invoke(_PROMPT_WITH_WD)
+        assert result.integrity_verdict == "clean"
+        assert result.verdict == "fail"
+
+    def test_verifier_tool_defs_exclude_write_file(self):
+        names = {t["name"] for t in VERIFIER_TOOL_DEFS}
+        assert "write_file" not in names
+        assert "bash" in names
+        assert "read_file" in names
+        assert "list_directory" in names
+
+    def test_max_rounds_returns_clean_integrity_verdict(self):
+        mock_client = MagicMock()
+        mock_client.messages.create.return_value = _make_response(
+            "tool_use",
+            [_make_tool_use_block("bash", {"command": "echo hi"})],
+        )
+        invoker = AnthropicVerifierInvoker(
+            mock_client, "claude-sonnet-4-6", max_tool_rounds=2
+        )
+        result = invoker.invoke(_PROMPT_WITH_WD)
+        assert result.integrity_verdict == "clean"
