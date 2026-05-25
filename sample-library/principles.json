@@ -1,0 +1,122 @@
+[
+  {
+    "id": "yagni",
+    "statement": "Build only what the current requirement demands; defer everything else.",
+    "citation": {"book": "Agile Software Development Principles", "isbn": "", "chapter": "Design Principles", "section": "YAGNI"},
+    "checkability_tier": 1,
+    "evidence_chunk": "Adding a feature before it is needed costs twice: once to build it and once to refactor it when the real requirement arrives.",
+    "related_ids": ["kiss", "dry"]
+  },
+  {
+    "id": "kiss",
+    "statement": "Prefer the simplest design that solves the problem; complexity is a liability.",
+    "citation": {"book": "The Pragmatic Programmer", "isbn": "", "chapter": "A Pragmatic Approach", "section": "KISS"},
+    "checkability_tier": 2,
+    "evidence_chunk": "Every layer of abstraction added speculatively must be maintained, understood, and debugged without the benefit of a concrete use case to guide it.",
+    "related_ids": ["yagni", "small-focused-units"]
+  },
+  {
+    "id": "dry",
+    "statement": "Every piece of knowledge must have a single, authoritative representation in the system.",
+    "citation": {"book": "The Pragmatic Programmer", "isbn": "", "chapter": "A Pragmatic Approach", "section": "DRY"},
+    "checkability_tier": 1,
+    "evidence_chunk": "Duplication of logic or data leads to divergence: when you change one copy, the others silently drift, producing contradictions the compiler cannot catch.",
+    "related_ids": ["yagni", "srp"]
+  },
+  {
+    "id": "explicit-over-implicit",
+    "statement": "Make behavior visible in code; implicit magic is technical debt.",
+    "citation": {"book": "Clean Code", "isbn": "", "chapter": "Meaningful Names", "section": "Explicit Intent"},
+    "checkability_tier": 2,
+    "evidence_chunk": "Code that relies on hidden conventions requires the reader to hold a mental model of side-effects that are not visible at the call site.",
+    "related_ids": ["defensive-programming", "fail-fast"]
+  },
+  {
+    "id": "fail-fast",
+    "statement": "Detect and report errors at the earliest possible point rather than continuing with invalid state.",
+    "citation": {"book": "Release It!", "isbn": "", "chapter": "Stability Patterns", "section": "Fail Fast"},
+    "checkability_tier": 1,
+    "evidence_chunk": "Systems that fail fast surface bugs at the point of introduction; systems that fail slow propagate corruption through the call stack, making root cause analysis expensive.",
+    "related_ids": ["design-for-failure", "defensive-programming", "explicit-over-implicit"]
+  },
+  {
+    "id": "defensive-programming",
+    "statement": "Validate all inputs at system boundaries; trust nothing from outside your module.",
+    "citation": {"book": "Code Complete", "isbn": "", "chapter": "Defensive Programming", "section": "Input Validation"},
+    "checkability_tier": 1,
+    "evidence_chunk": "Defensive programming assumes that callers will pass incorrect data; validation at boundaries prevents errors from propagating deep into the system where their origin is obscured.",
+    "related_ids": ["fail-fast", "design-for-failure"]
+  },
+  {
+    "id": "design-for-failure",
+    "statement": "Assume components will fail and design explicit recovery paths for each failure mode.",
+    "citation": {"book": "Designing Distributed Systems", "isbn": "", "chapter": "Reliability", "section": "Failure Modes"},
+    "checkability_tier": 2,
+    "evidence_chunk": "In distributed systems, partial failure is the norm. A service without explicit failure handling treats all failures as catastrophic, preventing graceful degradation.",
+    "related_ids": ["fail-fast", "design-for-observability", "rollback-over-fix-forward"]
+  },
+  {
+    "id": "tdd",
+    "statement": "Write a failing test before writing the code that makes it pass.",
+    "citation": {"book": "Test-Driven Development By Example", "isbn": "", "chapter": "TDD Patterns", "section": "Red-Green-Refactor"},
+    "checkability_tier": 1,
+    "evidence_chunk": "Writing the test first forces you to define the interface before the implementation, producing APIs shaped by the caller rather than by the implementer.",
+    "related_ids": ["test-isolation", "fail-fast"]
+  },
+  {
+    "id": "test-isolation",
+    "statement": "Each test must set up its own state and tear it down, with no shared mutable state across tests.",
+    "citation": {"book": "xUnit Test Patterns", "isbn": "", "chapter": "Test Smells", "section": "Interacting Tests"},
+    "checkability_tier": 1,
+    "evidence_chunk": "Tests that share state create order dependencies: a test that passes in isolation may fail when run after another, making the suite non-deterministic.",
+    "related_ids": ["tdd", "mock-at-boundaries"]
+  },
+  {
+    "id": "mock-at-boundaries",
+    "statement": "Mock only at system boundaries such as databases and HTTP; never mock internals you own.",
+    "citation": {"book": "Growing Object-Oriented Software Guided by Tests", "isbn": "", "chapter": "Listening to the Tests", "section": "Mocking"},
+    "checkability_tier": 2,
+    "evidence_chunk": "Mocking internal collaborators creates tests that verify implementation detail rather than behavior, making any refactoring that preserves behavior appear to break tests.",
+    "related_ids": ["test-isolation", "dependency-inversion"]
+  },
+  {
+    "id": "srp",
+    "statement": "Each module or class should have exactly one reason to change.",
+    "citation": {"book": "Clean Architecture", "isbn": "", "chapter": "Design Principles", "section": "Single Responsibility Principle"},
+    "checkability_tier": 2,
+    "evidence_chunk": "A module with two responsibilities will be changed by two different stakeholders; their independent edits will interfere, creating unexpected coupling.",
+    "related_ids": ["dry", "small-focused-units", "dependency-inversion"]
+  },
+  {
+    "id": "dependency-inversion",
+    "statement": "High-level modules must not depend on low-level modules; both should depend on abstractions.",
+    "citation": {"book": "Clean Architecture", "isbn": "", "chapter": "Design Principles", "section": "Dependency Inversion Principle"},
+    "checkability_tier": 2,
+    "evidence_chunk": "Direct dependency on concrete implementations couples modules at the source level, making it impossible to substitute implementations without modifying callers.",
+    "related_ids": ["srp", "mock-at-boundaries"]
+  },
+  {
+    "id": "small-focused-units",
+    "statement": "Keep functions, classes, and modules small enough to be understood in a single reading.",
+    "citation": {"book": "Clean Code", "isbn": "", "chapter": "Functions", "section": "Small Functions"},
+    "checkability_tier": 1,
+    "evidence_chunk": "Small units can be named precisely, tested in isolation, and understood without requiring context from surrounding code; large units accumulate hidden responsibilities.",
+    "related_ids": ["srp", "kiss"]
+  },
+  {
+    "id": "design-for-observability",
+    "statement": "Emit structured logs, metrics, and traces from the start; you cannot debug what you cannot observe.",
+    "citation": {"book": "Observability Engineering", "isbn": "", "chapter": "Principles", "section": "Observability First"},
+    "checkability_tier": 2,
+    "evidence_chunk": "Systems without observability force engineers to reproduce failures locally; with observability you can understand any system state from production telemetry alone.",
+    "related_ids": ["design-for-failure", "rollback-over-fix-forward"]
+  },
+  {
+    "id": "rollback-over-fix-forward",
+    "statement": "When a deployment causes an incident, roll back to the last known-good state before debugging.",
+    "citation": {"book": "Accelerate", "isbn": "", "chapter": "Technical Practices", "section": "Deployment Practices"},
+    "checkability_tier": 3,
+    "evidence_chunk": "Fix-forward prolongs outages because debugging under time pressure in a degraded system produces unreliable conclusions; rollback restores service and gives a clean environment.",
+    "related_ids": ["design-for-observability", "design-for-failure"]
+  }
+]
