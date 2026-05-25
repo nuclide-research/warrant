@@ -63,7 +63,7 @@ warrant resume
 |---|---|---|
 | `index_path` | required | Path to the Librarian index directory |
 | `base_repo` | required | Git repo Warrant operates on |
-| `out_dir` | `.warrant/runs` | Where run artifacts (plans, run state) are stored |
+| `out_dir` | required (`warrant init` default: `.warrant/runs`) | Where run artifacts (plans, run state) are stored |
 | `model_name` | `sentence-transformers/all-MiniLM-L6-v2` | Embedding model for retrieval |
 | `reranker_name` | `cross-encoder/ms-marco-MiniLM-L-6-v2` | Reranker model for retrieval |
 | `claude_model` | `claude-sonnet-4-6` | Anthropic model for the executor agent |
@@ -100,8 +100,7 @@ Then set `index_path` in your config to `<path-to-index>`.
 agent/          Plan artifact: versioned decision-tree data structure
 librarian/      Librarian: indexes engineering principles into a HybridRAG index
 loop/           Agent loop: Orient → Retrieve → Plan → Execute → Verify
-loop/loop/skill/    Claude Code skill wrapper
-loop/loop/api/      Standalone CLI (Anthropic API)
+loop/loop/api/  Standalone CLI (Anthropic API)
 sample-library/ Pre-built index with 15 engineering principles
 SKILL.md        Claude Code skill entry point
 .warrant/       Config and run artifacts (gitignored except examples)
