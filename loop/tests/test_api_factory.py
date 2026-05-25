@@ -107,3 +107,33 @@ def test_build_runner_wires_components(tmp_path):
     assert runner._verify_iteration_cap == 2
     mock_emb.assert_called_once_with(cfg.model_name)
     mock_rnk.assert_called_once_with(cfg.reranker_name)
+
+
+import sys
+from loop.api import __main__ as api_main
+
+
+def test_main_run_calls_runner(tmp_path):
+    cfg_data = {
+        "index_path": str(tmp_path / "index"),
+        "out_dir": str(tmp_path / "runs"),
+        "base_repo": str(tmp_path / "repo"),
+    }
+    cfg_file = tmp_path / "config.json"
+    cfg_file.write_text(json.dumps(cfg_data))
+
+    fake_runner = MagicMock()
+    fake_run_state = MagicMock()
+    fake_run_state.worktree_path = "/tmp/wt"
+    fake_report = MagicMock()
+    fake_runner.run.return_value = (fake_run_state, fake_report)
+
+    with patch("loop.api.__main__.load_config") as mock_cfg, \
+         patch("loop.api.__main__.build_runner", return_value=fake_runner), \
+         patch("loop.api.__main__.render_citation_report", return_value="report text"), \
+         patch("sys.argv", ["warrant", "run", "--direction", "build a cache layer",
+                            "--config", str(cfg_file)]):
+        mock_cfg.return_value = MagicMock(out_dir=str(tmp_path / "runs"))
+        api_main.main()
+
+    fake_runner.run.assert_called_once_with("build a cache layer")
