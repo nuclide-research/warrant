@@ -211,14 +211,29 @@ sample-library/
 
 **Build process:**
 
-The index is built once during Artifact C development using the real Librarian CLI:
+The librarian CLI (`librarian index`) expects a directory of O'Reilly Markdown books —
+it cannot ingest a JSON principle list directly. For the sample library, the index is
+built by a small build script (`sample-library/build_index.py`) that bypasses the
+corpus/LLM extraction pipeline and calls the librarian internals directly:
 
-```bash
-librarian index sample-library/principles.json --output sample-library/index
+```python
+# sample-library/build_index.py
+import json
+from pathlib import Path
+from librarian.models import Principle, Citation
+from librarian.store import PrincipleStore
+from librarian.embedding import embed_principles
+from librarian.edges import build_edge_graph
+
+principles = [Principle(**p) for p in json.loads(Path("principles.json").read_text())]
+store = PrincipleStore(Path("index"))
+embed_principles(store, principles)
+build_edge_graph(store, principles)
+store.save()
 ```
 
-(Or via a small Python script that calls the Librarian API directly if the CLI
-interface differs.) The resulting `index/` directory is committed to git.
+This script is checked in at `sample-library/build_index.py` and run once during
+development; its output (`index/`) is committed to git. Users never run it.
 
 At 15 principles with 384-dimensional embeddings (all-MiniLM-L6-v2), the index is
 well under 1 MB — safe to commit.
@@ -247,6 +262,7 @@ Lower caps for the demo so it runs in under a minute.
 | Create | `README.md` |
 | Create | `Makefile` |
 | Create | `sample-library/principles.json` |
+| Create | `sample-library/build_index.py` |
 | Create | `sample-library/index/` (pre-built, committed) |
 | Create | `sample-library/demo-config.json` |
 | Create | `docs/superpowers/specs/2026-05-24-warrant-artifact-c-design.md` (this file) |
