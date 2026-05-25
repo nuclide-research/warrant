@@ -17,7 +17,7 @@ def main() -> None:
     raw: list[dict] = json.loads((HERE / "principles.json").read_text(encoding="utf-8"))
 
     # Pop related_ids before building Principle objects (not a model field)
-    related: dict[str, list[str]] = {p["id"]: p.pop("related_ids", []) for p in raw}
+    related: dict[str, list[dict]] = {p["id"]: p.pop("related_ids", []) for p in raw}
 
     from librarian.models import Principle, Citation, Edge
     from librarian.store import Index, save_index
@@ -38,19 +38,21 @@ def main() -> None:
     embedder = Embedder()
     embeddings = embedder.encode([p.statement for p in principles])
 
-    # Build edges from related_ids; use shares_topic (no LLM needed)
+    # Build edges from related_ids with their specified kinds
     id_set = {p.id for p in principles}
     edges: list[Edge] = []
     seen: set[tuple[str, str]] = set()
     for p in principles:
-        for dst_id in related.get(p.id, []):
+        for entry in related.get(p.id, []):
+            dst_id = entry["id"]
+            kind = entry["kind"]
             if dst_id not in id_set or dst_id == p.id:
                 continue
             key = (min(p.id, dst_id), max(p.id, dst_id))
             if key in seen:
                 continue
             seen.add(key)
-            edges.append(Edge(src=p.id, dst=dst_id, kind="shares_topic"))
+            edges.append(Edge(src=p.id, dst=dst_id, kind=kind))
 
     index = Index(principles=principles, embeddings=embeddings, edges=edges)
     out_dir = HERE / "index"
