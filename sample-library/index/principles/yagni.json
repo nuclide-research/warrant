@@ -1,0 +1,12 @@
+{
+  "id": "yagni",
+  "statement": "Build only what the current requirement demands; defer everything else.",
+  "citation": {
+    "book": "Agile Software Development Principles",
+    "isbn": "",
+    "chapter": "Design Principles",
+    "section": "YAGNI"
+  },
+  "checkability_tier": 1,
+  "evidence_chunk": "Adding a feature before it is needed costs twice: once to build it and once to refactor it when the real requirement arrives."
+}

@@ -1,0 +1,12 @@
+{
+  "id": "design-for-observability",
+  "statement": "Emit structured logs, metrics, and traces from the start; you cannot debug what you cannot observe.",
+  "citation": {
+    "book": "Observability Engineering",
+    "isbn": "",
+    "chapter": "Principles",
+    "section": "Observability First"
+  },
+  "checkability_tier": 2,
+  "evidence_chunk": "Systems without observability force engineers to reproduce failures locally; with observability you can understand any system state from production telemetry alone."
+}

@@ -1,0 +1,8 @@
+{
+  "index_path": "sample-library/index",
+  "base_repo": ".",
+  "out_dir": ".warrant/demo-runs",
+  "global_iteration_cap": 3,
+  "per_node_attempt_cap": 2,
+  "verify_iteration_cap": 1
+}

@@ -1,0 +1,12 @@
+{
+  "id": "defensive-programming",
+  "statement": "Validate all inputs at system boundaries; trust nothing from outside your module.",
+  "citation": {
+    "book": "Code Complete",
+    "isbn": "",
+    "chapter": "Defensive Programming",
+    "section": "Input Validation"
+  },
+  "checkability_tier": 1,
+  "evidence_chunk": "Defensive programming assumes that callers will pass incorrect data; validation at boundaries prevents errors from propagating deep into the system where their origin is obscured."
+}

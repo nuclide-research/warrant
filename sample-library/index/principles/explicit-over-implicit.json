@@ -1,0 +1,12 @@
+{
+  "id": "explicit-over-implicit",
+  "statement": "Make behavior visible in code; implicit magic is technical debt.",
+  "citation": {
+    "book": "Clean Code",
+    "isbn": "",
+    "chapter": "Meaningful Names",
+    "section": "Explicit Intent"
+  },
+  "checkability_tier": 2,
+  "evidence_chunk": "Code that relies on hidden conventions requires the reader to hold a mental model of side-effects that are not visible at the call site."
+}

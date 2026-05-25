@@ -1,0 +1,92 @@
+[
+  {
+    "src": "yagni",
+    "dst": "kiss",
+    "kind": "shares_topic"
+  },
+  {
+    "src": "yagni",
+    "dst": "dry",
+    "kind": "contradicts"
+  },
+  {
+    "src": "kiss",
+    "dst": "small-focused-units",
+    "kind": "shares_topic"
+  },
+  {
+    "src": "dry",
+    "dst": "srp",
+    "kind": "shares_topic"
+  },
+  {
+    "src": "explicit-over-implicit",
+    "dst": "defensive-programming",
+    "kind": "shares_topic"
+  },
+  {
+    "src": "explicit-over-implicit",
+    "dst": "fail-fast",
+    "kind": "shares_topic"
+  },
+  {
+    "src": "fail-fast",
+    "dst": "design-for-failure",
+    "kind": "refines"
+  },
+  {
+    "src": "fail-fast",
+    "dst": "defensive-programming",
+    "kind": "shares_topic"
+  },
+  {
+    "src": "defensive-programming",
+    "dst": "design-for-failure",
+    "kind": "shares_topic"
+  },
+  {
+    "src": "design-for-failure",
+    "dst": "design-for-observability",
+    "kind": "shares_topic"
+  },
+  {
+    "src": "design-for-failure",
+    "dst": "rollback-over-fix-forward",
+    "kind": "shares_topic"
+  },
+  {
+    "src": "tdd",
+    "dst": "test-isolation",
+    "kind": "shares_topic"
+  },
+  {
+    "src": "tdd",
+    "dst": "fail-fast",
+    "kind": "refines"
+  },
+  {
+    "src": "test-isolation",
+    "dst": "mock-at-boundaries",
+    "kind": "shares_topic"
+  },
+  {
+    "src": "mock-at-boundaries",
+    "dst": "dependency-inversion",
+    "kind": "shares_topic"
+  },
+  {
+    "src": "srp",
+    "dst": "small-focused-units",
+    "kind": "shares_topic"
+  },
+  {
+    "src": "srp",
+    "dst": "dependency-inversion",
+    "kind": "shares_topic"
+  },
+  {
+    "src": "design-for-observability",
+    "dst": "rollback-over-fix-forward",
+    "kind": "shares_topic"
+  }
+]

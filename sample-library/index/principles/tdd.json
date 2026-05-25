@@ -1,0 +1,12 @@
+{
+  "id": "tdd",
+  "statement": "Write a failing test before writing the code that makes it pass.",
+  "citation": {
+    "book": "Test-Driven Development By Example",
+    "isbn": "",
+    "chapter": "TDD Patterns",
+    "section": "Red-Green-Refactor"
+  },
+  "checkability_tier": 1,
+  "evidence_chunk": "Writing the test first forces you to define the interface before the implementation, producing APIs shaped by the caller rather than by the implementer."
+}

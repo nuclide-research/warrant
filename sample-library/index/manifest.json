@@ -1,0 +1,20 @@
+{
+  "order": [
+    "yagni",
+    "kiss",
+    "dry",
+    "explicit-over-implicit",
+    "fail-fast",
+    "defensive-programming",
+    "design-for-failure",
+    "tdd",
+    "test-isolation",
+    "mock-at-boundaries",
+    "srp",
+    "dependency-inversion",
+    "small-focused-units",
+    "design-for-observability",
+    "rollback-over-fix-forward"
+  ],
+  "count": 15
+}

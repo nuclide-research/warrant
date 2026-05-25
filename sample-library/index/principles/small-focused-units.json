@@ -1,0 +1,12 @@
+{
+  "id": "small-focused-units",
+  "statement": "Keep functions, classes, and modules small enough to be understood in a single reading.",
+  "citation": {
+    "book": "Clean Code",
+    "isbn": "",
+    "chapter": "Functions",
+    "section": "Small Functions"
+  },
+  "checkability_tier": 1,
+  "evidence_chunk": "Small units can be named precisely, tested in isolation, and understood without requiring context from surrounding code; large units accumulate hidden responsibilities."
+}

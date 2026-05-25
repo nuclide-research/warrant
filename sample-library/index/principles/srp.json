@@ -1,0 +1,12 @@
+{
+  "id": "srp",
+  "statement": "Each module or class should have exactly one reason to change.",
+  "citation": {
+    "book": "Clean Architecture",
+    "isbn": "",
+    "chapter": "Design Principles",
+    "section": "Single Responsibility Principle"
+  },
+  "checkability_tier": 2,
+  "evidence_chunk": "A module with two responsibilities will be changed by two different stakeholders; their independent edits will interfere, creating unexpected coupling."
+}

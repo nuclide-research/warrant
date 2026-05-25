@@ -1,0 +1,12 @@
+{
+  "id": "test-isolation",
+  "statement": "Each test must set up its own state and tear it down, with no shared mutable state across tests.",
+  "citation": {
+    "book": "xUnit Test Patterns",
+    "isbn": "",
+    "chapter": "Test Smells",
+    "section": "Interacting Tests"
+  },
+  "checkability_tier": 1,
+  "evidence_chunk": "Tests that share state create order dependencies: a test that passes in isolation may fail when run after another, making the suite non-deterministic."
+}

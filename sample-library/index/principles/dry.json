@@ -1,0 +1,12 @@
+{
+  "id": "dry",
+  "statement": "Every piece of knowledge must have a single, authoritative representation in the system.",
+  "citation": {
+    "book": "The Pragmatic Programmer",
+    "isbn": "",
+    "chapter": "A Pragmatic Approach",
+    "section": "DRY"
+  },
+  "checkability_tier": 1,
+  "evidence_chunk": "Duplication of logic or data leads to divergence: when you change one copy, the others silently drift, producing contradictions the compiler cannot catch."
+}

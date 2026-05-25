@@ -1,0 +1,12 @@
+{
+  "id": "fail-fast",
+  "statement": "Detect and report errors at the earliest possible point rather than continuing with invalid state.",
+  "citation": {
+    "book": "Release It!",
+    "isbn": "",
+    "chapter": "Stability Patterns",
+    "section": "Fail Fast"
+  },
+  "checkability_tier": 1,
+  "evidence_chunk": "Systems that fail fast surface bugs at the point of introduction; systems that fail slow propagate corruption through the call stack, making root cause analysis expensive."
+}

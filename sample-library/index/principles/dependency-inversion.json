@@ -1,0 +1,12 @@
+{
+  "id": "dependency-inversion",
+  "statement": "High-level modules must not depend on low-level modules; both should depend on abstractions.",
+  "citation": {
+    "book": "Clean Architecture",
+    "isbn": "",
+    "chapter": "Design Principles",
+    "section": "Dependency Inversion Principle"
+  },
+  "checkability_tier": 2,
+  "evidence_chunk": "Direct dependency on concrete implementations couples modules at the source level, making it impossible to substitute implementations without modifying callers."
+}

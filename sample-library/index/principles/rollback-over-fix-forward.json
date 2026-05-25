@@ -1,0 +1,12 @@
+{
+  "id": "rollback-over-fix-forward",
+  "statement": "When a deployment causes an incident, roll back to the last known-good state before debugging.",
+  "citation": {
+    "book": "Accelerate",
+    "isbn": "",
+    "chapter": "Technical Practices",
+    "section": "Deployment Practices"
+  },
+  "checkability_tier": 3,
+  "evidence_chunk": "Fix-forward prolongs outages because debugging under time pressure in a degraded system produces unreliable conclusions; rollback restores service and gives a clean environment."
+}

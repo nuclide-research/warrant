@@ -1,0 +1,12 @@
+{
+  "id": "kiss",
+  "statement": "Prefer the simplest design that solves the problem; complexity is a liability.",
+  "citation": {
+    "book": "The Pragmatic Programmer",
+    "isbn": "",
+    "chapter": "A Pragmatic Approach",
+    "section": "KISS"
+  },
+  "checkability_tier": 2,
+  "evidence_chunk": "Every layer of abstraction added speculatively must be maintained, understood, and debugged without the benefit of a concrete use case to guide it."
+}

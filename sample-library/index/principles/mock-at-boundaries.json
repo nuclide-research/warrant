@@ -1,0 +1,12 @@
+{
+  "id": "mock-at-boundaries",
+  "statement": "Mock only at system boundaries such as databases and HTTP; never mock internals you own.",
+  "citation": {
+    "book": "Growing Object-Oriented Software Guided by Tests",
+    "isbn": "",
+    "chapter": "Listening to the Tests",
+    "section": "Mocking"
+  },
+  "checkability_tier": 2,
+  "evidence_chunk": "Mocking internal collaborators creates tests that verify implementation detail rather than behavior, making any refactoring that preserves behavior appear to break tests."
+}

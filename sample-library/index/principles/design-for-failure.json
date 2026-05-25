@@ -1,0 +1,12 @@
+{
+  "id": "design-for-failure",
+  "statement": "Assume components will fail and design explicit recovery paths for each failure mode.",
+  "citation": {
+    "book": "Designing Distributed Systems",
+    "isbn": "",
+    "chapter": "Reliability",
+    "section": "Failure Modes"
+  },
+  "checkability_tier": 2,
+  "evidence_chunk": "In distributed systems, partial failure is the norm. A service without explicit failure handling treats all failures as catastrophic, preventing graceful degradation."
+}
