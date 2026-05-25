@@ -1,6 +1,8 @@
 from __future__ import annotations
+import json
 import os
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -60,3 +62,38 @@ class TestWorktreeSandbox:
         (sibling / "file.txt").write_text("data")
         with pytest.raises(ValueError):
             sandbox.read_file(f"../{tmp_path.name}evil/file.txt")
+
+
+from loop.api.invokers import AnthropicLLM
+
+
+def _make_text_block(text: str):
+    b = MagicMock()
+    b.type = "text"
+    b.text = text
+    return b
+
+
+def _make_response(stop_reason: str, content: list):
+    r = MagicMock()
+    r.stop_reason = stop_reason
+    r.content = content
+    return r
+
+
+class TestAnthropicLLM:
+    def test_llm_returns_stripped_text(self):
+        mock_client = MagicMock()
+        mock_client.messages.create.return_value = _make_response(
+            "end_turn", [_make_text_block("  hello world  ")]
+        )
+        llm = AnthropicLLM(mock_client, "claude-sonnet-4-6")
+        result = llm("some prompt")
+        assert result == "hello world"
+
+    def test_llm_raises_on_api_error(self):
+        mock_client = MagicMock()
+        mock_client.messages.create.side_effect = Exception("api connection failed")
+        llm = AnthropicLLM(mock_client, "claude-sonnet-4-6")
+        with pytest.raises(RuntimeError):
+            llm("some prompt")
