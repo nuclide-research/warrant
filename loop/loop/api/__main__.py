@@ -9,7 +9,7 @@ from ..citationreport import render_citation_report
 from .factory import load_config, build_runner
 
 _DEFAULT_CONFIG = Path(".warrant/api-config.json")
-_INIT_OUTPUT = Path(".warrant/api-config.json")
+_INIT_OUTPUT = Path(".warrant/api-config.json")  # separate name so tests can patch write target independently
 
 
 def cmd_run(args: argparse.Namespace) -> None:

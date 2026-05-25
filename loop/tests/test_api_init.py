@@ -1,4 +1,5 @@
 from __future__ import annotations
+import argparse
 import json
 from pathlib import Path
 from unittest.mock import patch
@@ -12,7 +13,6 @@ def test_init_writes_correct_json(tmp_path):
     out_path = tmp_path / ".warrant" / "api-config.json"
     with patch.object(m, "_INIT_OUTPUT", out_path), \
          patch("builtins.input", side_effect=[".", "sample-library/index", ".warrant/runs"]):
-        import argparse
         m.cmd_init(argparse.Namespace())
     data = json.loads(out_path.read_text())
     assert data == {
@@ -26,7 +26,6 @@ def test_init_uses_defaults_on_blank_input(tmp_path):
     out_path = tmp_path / ".warrant" / "api-config.json"
     with patch.object(m, "_INIT_OUTPUT", out_path), \
          patch("builtins.input", side_effect=["", "", ""]):
-        import argparse
         m.cmd_init(argparse.Namespace())
     data = json.loads(out_path.read_text())
     assert data["base_repo"] == "."
@@ -38,7 +37,6 @@ def test_init_uses_custom_values(tmp_path):
     out_path = tmp_path / ".warrant" / "api-config.json"
     with patch.object(m, "_INIT_OUTPUT", out_path), \
          patch("builtins.input", side_effect=["/my/repo", "/my/index", "/my/runs"]):
-        import argparse
         m.cmd_init(argparse.Namespace())
     data = json.loads(out_path.read_text())
     assert data["base_repo"] == "/my/repo"
@@ -51,8 +49,7 @@ def test_init_declines_overwrite(tmp_path):
     out_path.parent.mkdir(parents=True)
     out_path.write_text('{"base_repo": "original"}')
     with patch.object(m, "_INIT_OUTPUT", out_path), \
-         patch("builtins.input", return_value="n"):
-        import argparse
+         patch("builtins.input", side_effect=["n"]):
         m.cmd_init(argparse.Namespace())
     assert json.loads(out_path.read_text())["base_repo"] == "original"
 
@@ -63,7 +60,6 @@ def test_init_overwrites_on_y(tmp_path):
     out_path.write_text('{"base_repo": "original"}')
     with patch.object(m, "_INIT_OUTPUT", out_path), \
          patch("builtins.input", side_effect=["y", "/new/repo", "/new/index", "/new/runs"]):
-        import argparse
         m.cmd_init(argparse.Namespace())
     assert json.loads(out_path.read_text())["base_repo"] == "/new/repo"
 
@@ -73,7 +69,6 @@ def test_init_creates_warrant_dir(tmp_path):
     assert not out_path.parent.exists()
     with patch.object(m, "_INIT_OUTPUT", out_path), \
          patch("builtins.input", side_effect=[".", "sample-library/index", ".warrant/runs"]):
-        import argparse
         m.cmd_init(argparse.Namespace())
     assert out_path.parent.is_dir()
 
