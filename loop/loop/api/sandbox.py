@@ -4,14 +4,18 @@ from pathlib import Path
 
 
 class WorktreeSandbox:
-    """Executes bash and file operations constrained to a git worktree directory."""
+    """Executes bash and file operations with the worktree as working directory.
+
+    File paths (read_file, write_file, list_directory) are constrained to the
+    worktree root. Bash commands run with cwd=root but are not chrooted.
+    """
 
     def __init__(self, worktree_path: str) -> None:
         self._root = Path(worktree_path).resolve()
 
     def _resolve(self, path: str) -> Path:
         resolved = (self._root / path).resolve()
-        if not str(resolved).startswith(str(self._root)):
+        if not resolved.is_relative_to(self._root):
             raise ValueError(
                 f"path escape rejected: {path!r} resolves outside worktree {self._root}"
             )

@@ -50,3 +50,13 @@ class TestWorktreeSandbox:
         sandbox = WorktreeSandbox(str(tmp_path))
         with pytest.raises(ValueError):
             sandbox.write_file("../outside.txt", "data")
+
+    def test_path_prefix_sibling_rejected(self, tmp_path):
+        sandbox = WorktreeSandbox(str(tmp_path))
+        # A sibling path whose string starts with the root string (e.g. /tmp/abcevil vs /tmp/abc)
+        # must be rejected even though startswith would accept it.
+        sibling = tmp_path.parent / (tmp_path.name + "evil")
+        sibling.mkdir(exist_ok=True)
+        (sibling / "file.txt").write_text("data")
+        with pytest.raises(ValueError):
+            sandbox.read_file(f"../{tmp_path.name}evil/file.txt")
