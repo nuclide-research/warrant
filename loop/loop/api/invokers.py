@@ -193,6 +193,8 @@ class AnthropicInvoker:
                                 "content": result_str,
                             }
                         )
+                if not tool_results:
+                    break  # stop_reason was max_tokens/stop_sequence — exit loop, return failed
                 messages.append({"role": "assistant", "content": response.content})
                 messages.append({"role": "user", "content": tool_results})
 
@@ -280,6 +282,8 @@ class AnthropicVerifierInvoker:
                                 "content": result_str,
                             }
                         )
+                if not tool_results:
+                    break  # stop_reason was max_tokens/stop_sequence — exit loop, return failed
                 messages.append({"role": "assistant", "content": response.content})
                 messages.append({"role": "user", "content": tool_results})
 

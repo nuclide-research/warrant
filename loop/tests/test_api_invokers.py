@@ -190,6 +190,16 @@ class TestAnthropicInvoker:
         result = invoker.invoke("## Your task\nDo something")
         assert isinstance(result, ExecutorResult)
 
+    def test_max_tokens_stop_reason_returns_failed(self):
+        mock_client = MagicMock()
+        mock_client.messages.create.return_value = _make_response(
+            "max_tokens", []  # no content blocks
+        )
+        invoker = AnthropicInvoker(mock_client, "claude-sonnet-4-6", max_tool_rounds=3)
+        result = invoker.invoke(_PROMPT_WITH_WD)
+        assert result.status == "failed"
+        assert mock_client.messages.create.call_count == 1
+
 
 from loop.api.invokers import AnthropicVerifierInvoker, VERIFIER_TOOL_DEFS
 
